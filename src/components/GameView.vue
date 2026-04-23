@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 
-const API = "https://DEIN-BACKEND.onrender.com"
+const API = "https://we-play-backend.onrender.com"
 
 const search = ref('')
 const games = ref([])
