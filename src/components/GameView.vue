@@ -97,68 +97,152 @@ onMounted(loadGames)
 </template>
 
 <style>
+/* GENERAL */
+body {
+  font-family: Arial, sans-serif;
+  background: #0f172a; /* dark blue */
+  color: #f1f5f9;
+  margin: 0;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* NAV */
+nav {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+nav button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  background: #1e293b;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+nav button:hover {
+  background: #3b82f6;
+}
+
+/* SEARCH */
 .search-wrapper {
   position: relative;
   width: 500px;
-  margin: 0 auto 20px auto;
+  margin: 0 auto 30px auto;
 }
 
 .search-wrapper input {
   width: 100%;
-  padding: 12px 14px;
-  font-size: 18px;
-  border: 1px solid #bbb;
-  border-radius: 6px;
+  padding: 14px;
+  font-size: 16px;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  background: #1e293b;
+  color: white;
 }
 
+.search-wrapper input::placeholder {
+  color: #94a3b8;
+}
+
+/* DROPDOWN */
 .dropdown {
   position: absolute;
-  top: 100%;
+  top: 110%;
   left: 0;
   right: 0;
-  background: white;
-  border: 1px solid #ccc;
-  max-height: 250px;
+  background: #1e293b;
+  border-radius: 10px;
+  max-height: 260px;
   overflow-y: auto;
   z-index: 10;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 }
 
 .dropdown-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px;
+  gap: 12px;
+  padding: 10px;
   cursor: pointer;
+  transition: 0.2s;
 }
 
 .dropdown-item:hover {
-  background: #f0f0f0;
+  background: #334155;
 }
 
 .dropdown-item img {
-  width: 40px;
-  height: 40px;
+  width: 45px;
+  height: 45px;
+  border-radius: 6px;
   object-fit: cover;
 }
 
+/* GRID */
 .games {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
 }
 
+/* CARD */
 .card {
-  border: 1px solid #ccc;
-  padding: 10px;
+  background: #1e293b;
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  transition: 0.25s;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
 
-img {
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+}
+
+/* IMAGE */
+.card img {
   width: 100%;
   height: 180px;
+  border-radius: 8px;
   object-fit: cover;
-  display: block;
+}
+
+/* TITLE */
+.card h3 {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* DELETE BUTTON */
+.card button {
+  margin-top: auto;
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  background: #ef4444;
+  color: white;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.card button:hover {
+  background: #dc2626;
 }
 </style>
