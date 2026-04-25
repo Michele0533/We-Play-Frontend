@@ -100,7 +100,6 @@ onMounted(loadGames)
 /* GENERAL */
 body {
   font-family: Arial, sans-serif;
-  background: #0f172a; /* dark blue */
   color: #f1f5f9;
   margin: 0;
   padding: 20px;
