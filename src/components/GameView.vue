@@ -102,7 +102,7 @@ body {
   font-family: Arial, sans-serif;
   background:
     linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
-    url('./bg.jpg') center/cover no-repeat fixed;
+    url('./maxresdefault.jpg') center/cover no-repeat fixed;
 
   color: #f1f5f9;
   margin: 0;
