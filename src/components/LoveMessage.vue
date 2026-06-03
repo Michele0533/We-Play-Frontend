@@ -65,7 +65,7 @@ const showMessage = ref(false)
 }
 
 .popup {
-  background: white;
+  background: gray;
   padding: 30px;
   border-radius: 20px;
   max-width: 500px;
