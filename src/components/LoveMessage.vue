@@ -45,7 +45,7 @@ const showMessage = ref(false)
   background: #ff5c8a;
   color: white;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 32px;
   z-index: 1000;
 }
 
