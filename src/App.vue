@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import GameView from './components/GameView.vue'
 import MovieView from './components/MovieView.vue'
+import LoveMessage from './components/LoveMessage.vue'
 
 const page = ref('games')
 </script>
@@ -13,6 +14,8 @@ const page = ref('games')
     <button @click="page = 'games'">🎮 Games</button>
     <button @click="page = 'movies'">🎬 Movies</button>
   </nav>
+
+  <LoveMessage />
 
   <GameView v-if="page === 'games'" />
   <MovieView v-if="page === 'movies'" />
