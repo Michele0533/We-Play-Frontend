@@ -19,22 +19,25 @@ const showMessage = ref(false)
         <strong>Tag 1 – Wie alles begann ❤️</strong>
         <br><br>
 
-        Nichts war unerwarteter als deine Liebe zu mir. Ehrlicherweise muss man sagen,
+        Nichts war unerwarteter als deine Liebe zu <strong>m</strong>ir. Ehrlicherweise muss man sagen,
         dass es am Anfang nicht gerade danach aussah. Und dann entstand aus dem Nichts,
         von beiden Seiten aus, diese Liebe. Nichts hätte mich glücklicher machen können.
         <br><br>
 
-        Aus dem Spaß, dass du mich ankettest und zum Hund machst … einer von uns wird
-        angekettet und der andere ist der Hund. xD Wer hätte gedacht, dass daraus einmal
-        etwas so Wunderschönes entstehen würde? ❤️
+        Wh<strong>y</strong> hätte ich auch etwas anderes wollen können als dich? ❤️
         <br><br>
 
-        Als ich gemerkt habe, was für ein toller und wunderbarer Mensch du bist,
+        Aus dem Spaß, dass du mich ankettest und zum Hund machst … einer von uns wird
+        angekettet und der andere ist der Hund. xD Wer hätte gedacht, dass daraus einmal
+        etwas so <strong>w</strong>underschönes entstehen würde?
+        <br><br>
+
+        Als ich gemerkt habe, was für ein toller und <strong>i</strong>mmer besonderer Mensch du bist,
         wollte ich nur noch dich.
         <br><br>
 
         Auch als du mir den kleinen Racker Silas vorgestellt hast, war alles wie in
-        einem Traum. 🥰
+        einem Traum. 🥰 Vieles davon werde ich mir e<strong>r</strong>finnern und nie vergessen.
         <br><br>
 
         Jetzt, wo ich diesen Text schreibe, hast du eine schwere Zeit. Aber lass mich
@@ -43,8 +46,7 @@ const showMessage = ref(false)
         <br><br>
 
         Ich bin dankbar für das Schicksal, das uns an diesem Tag zusammengebracht hat.
-        Ich hätte niemals gedacht, dass Sayu-Streams einmal so wichtig für mein Leben
-        werden würden.
+        Ich hätte niemals gedacht, dass Sayu-Streams einmal so wichtig für mein Leben w<strong>e</strong>rden würden.
         <br><br>
 
         Und egal, was kommt – ich bin froh, dass wir uns gefunden haben.
