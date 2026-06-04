@@ -16,15 +16,39 @@ const showMessage = ref(false)
       <h2>💌 Für dich</h2>
 
       <p>
-        Hallo mein Schatz, wie es aussieht, hast du diese Funktion gefunden.
-        Als erste Nachricht werde ich dir erst mal Bescheid geben, wie das
-        funktioniert.
+        <strong>Tag 1 – Wie alles begann ❤️</strong>
         <br><br>
-        Jeden Tag werde ich nun einen kleinen Überraschungstext schreiben.
-        Jeder Tag wird anders sein und jeden Tag werde ich mir etwas Neues
-        einfallen lassen. Bedeutet für dich: Schau gerne öfter vorbei. ❤️
+
+        Nichts war unerwarteter als deine Liebe zu mir. Ehrlicherweise muss man sagen,
+        dass es am Anfang nicht gerade danach aussah. Und dann entstand aus dem Nichts,
+        von beiden Seiten aus, diese Liebe. Nichts hätte mich glücklicher machen können.
         <br><br>
-        Ich liebe dich. 🥰
+
+        Aus dem Spaß, dass du mich ankettest und zum Hund machst … einer von uns wird
+        angekettet und der andere ist der Hund. xD Wer hätte gedacht, dass daraus einmal
+        etwas so Wunderschönes entstehen würde? ❤️
+        <br><br>
+
+        Als ich gemerkt habe, was für ein toller und wunderbarer Mensch du bist,
+        wollte ich nur noch dich.
+        <br><br>
+
+        Auch als du mir den kleinen Racker Silas vorgestellt hast, war alles wie in
+        einem Traum. 🥰
+        <br><br>
+
+        Jetzt, wo ich diesen Text schreibe, hast du eine schwere Zeit. Aber lass mich
+        deine Hand nehmen und dir zeigen, dass du dich bei mir ausruhen kannst,
+        my love. Lass deine Vergangenheit stehen, diese ist mir egal. ❤️
+        <br><br>
+
+        Ich bin dankbar für das Schicksal, das uns an diesem Tag zusammengebracht hat.
+        Ich hätte niemals gedacht, dass Sayu-Streams einmal so wichtig für mein Leben
+        werden würden.
+        <br><br>
+
+        Und egal, was kommt – ich bin froh, dass wir uns gefunden haben.
+        Ich liebe dich. ❤️
       </p>
 
       <button class="close-button" @click="showMessage = false">
