@@ -51,6 +51,8 @@ const showMessage = ref(false)
 
         Und egal, was kommt – ich bin froh, dass wir uns gefunden haben.
         Ich liebe dich. ❤️
+
+        Findest du die versteckte nachricht ^^ 
       </p>
 
       <button class="close-button" @click="showMessage = false">
