@@ -37,10 +37,10 @@ const showMessage = ref(false)
         <br><br>
 
         Auch als du mir den kleinen Racker Silas vorgestellt hast, war alles wie in
-        einem Traum. 🥰 Vieles davon werde ich mir e<strong>r</strong>finnern und nie vergessen.
+        einem Traum. 🥰 Vieles davon werde ich mir er<strong>f</strong>innern und nie vergessen.
         <br><br>
 
-        Jetzt, wo ich diesen Text schreibe, hast du eine schwere Zeit. Aber lass mich
+        Jetzt, wo ich diesen Text schreibe, hast du <strong>e<strong>ine schwere Zeit. Aber lass mich
         deine Hand nehmen und dir zeigen, dass du dich bei mir ausruhen kannst,
         my love. Lass deine Vergangenheit stehen, diese ist mir egal. ❤️
         <br><br>
