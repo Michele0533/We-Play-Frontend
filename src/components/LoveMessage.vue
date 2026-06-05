@@ -1,104 +1,159 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, reactive, computed } from 'vue'
 
-const answers = ref({
-  genshin: '',
-  wife: '',
-  husband: '',
-  zelda: '',
-  link: '',
-  silas: '',
-  dokomi: '',
-  anketten: ''
-})
+const showMessage = ref(false)
 
-const solved = computed(() => {
-  return (
-    answers.value.genshin.toLowerCase() === 'genshin' &&
-    answers.value.wife.toLowerCase() === 'wife' &&
-    answers.value.husband.toLowerCase() === 'husband' &&
-    answers.value.zelda.toLowerCase() === 'zelda' &&
-    answers.value.link.toLowerCase() === 'link' &&
-    answers.value.silas.toLowerCase() === 'silas' &&
-    answers.value.dokomi.toLowerCase() === 'dokomi' &&
-    answers.value.anketten.toLowerCase() === 'anketten'
+// 10x10 Lösung (deine Wörter eingebaut)
+const solution = [
+  ['G','E','N','S','H','I','N',null,null,null],
+  [null,null,null,null,null,null,null,null,null,null],
+  ['W','I','F','E',null,null,null,null,null,null],
+  [null,null,null,null,null,null,null,null,null,null],
+  ['Z','E','L','D','A',null,null,null,null,null],
+  [null,null,null,null,null,null,null,null,null,null],
+  ['L','I','N','K',null,null,null,null,null,null],
+  [null,null,null,null,null,null,null,null,null,null],
+  ['S','I','L','A','S',null,null,null,null,null],
+  ['D','O','K','O','M','I',null,null,null,null]
+]
+
+// User Input Grid
+const user = reactive(
+  Array.from({ length: 10 }, () =>
+    Array.from({ length: 10 }, () => '')
   )
+)
+
+// Check if solved
+const solved = computed(() => {
+  for (let y = 0; y < 10; y++) {
+    for (let x = 0; x < 10; x++) {
+      if (solution[y][x]) {
+        if (user[y][x].toUpperCase() !== solution[y][x]) {
+          return false
+        }
+      }
+    }
+  }
+  return true
 })
+
+function close() {
+  showMessage.value = false
+}
 </script>
 
 <template>
-  <div class="crossword">
-    <h2>❤️ Unser kleines Kreuzworträtsel ❤️</h2>
+  <!-- Button -->
+  <button class="love-button" @click="showMessage = true">
+    ❤️ Nachricht
+  </button>
 
-    <div class="question">
-      <p>1. Unser Lieblingsspiel 🎮</p>
-      <input v-model="answers.genshin">
-    </div>
+  <!-- Popup -->
+  <div v-if="showMessage" class="popup-overlay">
+    <div class="popup">
 
-    <div class="question">
-      <p>2. Englisches Wort für Ehefrau</p>
-      <input v-model="answers.wife">
-    </div>
+      <h2>🧩 Kreuzworträtsel</h2>
+      <p>Löse alle Wörter und finde die Nachricht ❤️</p>
 
-    <div class="question">
-      <p>3. Englisches Wort für Ehemann</p>
-      <input v-model="answers.husband">
-    </div>
+      <!-- GRID -->
+      <div class="grid">
+        <div v-for="(row, y) in solution" :key="y" class="row">
+          <div v-for="(cell, x) in row" :key="x" class="cell">
+            
+            <input
+              v-if="cell"
+              v-model="user[y][x]"
+              maxlength="1"
+            />
 
-    <div class="question">
-      <p>4. Spielreihe mit Prinzessin Zelda</p>
-      <input v-model="answers.zelda">
-    </div>
+            <div v-else class="black"></div>
 
-    <div class="question">
-      <p>5. Held aus Hyrule</p>
-      <input v-model="answers.link">
-    </div>
+          </div>
+        </div>
+      </div>
 
-    <div class="question">
-      <p>6. Name des kleinen Rackers 🐶</p>
-      <input v-model="answers.silas">
-    </div>
+      <!-- SUCCESS -->
+      <div v-if="solved" class="success">
+        💖 Richtig!
+        <h1>MY WIFE ❤️</h1>
+      </div>
 
-    <div class="question">
-      <p>7. Anime-Convention in Düsseldorf</p>
-      <input v-model="answers.dokomi">
-    </div>
+      <button class="close-button" @click="close">
+        Schließen
+      </button>
 
-    <div class="question">
-      <p>8. Unser lustiger Insider 😆</p>
-      <input v-model="answers.anketten">
-    </div>
-
-    <div v-if="solved" class="result">
-      💖 Herzlichen Glückwunsch! 💖
-      <h1>MY WIFE ❤️</h1>
     </div>
   </div>
 </template>
 
 <style scoped>
-.crossword {
-  background: white;
-  padding: 30px;
-  border-radius: 20px;
-  max-width: 700px;
+.love-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 30px;
+  background: #ff5c8a;
+  color: white;
+  cursor: pointer;
+  font-size: 32px;
 }
 
-.question {
-  margin-bottom: 20px;
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.popup {
+  background: gray;
+  padding: 25px;
+  border-radius: 20px;
+  text-align: center;
+}
+
+.grid {
+  display: inline-block;
+  margin: 20px 0;
+}
+
+.row {
+  display: flex;
+}
+
+.cell {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #ccc;
 }
 
 input {
-  width: 250px;
-  padding: 10px;
-  border-radius: 10px;
-  border: 2px solid #ff8db3;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  border: none;
+  outline: none;
+  font-weight: bold;
 }
 
-.result {
-  margin-top: 30px;
-  text-align: center;
-  color: crimson;
+.black {
+  width: 100%;
+  height: 100%;
+  background: black;
+}
+
+.success {
+  margin-top: 15px;
+  color: hotpink;
+}
+
+.close-button {
+  margin-top: 15px;
+  padding: 10px 15px;
 }
 </style>
