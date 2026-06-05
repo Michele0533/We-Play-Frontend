@@ -1,42 +1,142 @@
 <script setup>
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 
 const show = ref(false)
-const reveal = ref(false)
 
-// Scroll fix
-watch(show, (v) => {
-  document.body.style.overflow = v ? 'hidden' : ''
-})
-
-/*
-🧩 ECHTES KREUZWORT (sauber gebaut)
-nur Wörter die sinnvoll kreuzen:
-*/
-const solution = [
-  ['C','O','M','P','U','T','E','R','S','P','I','E','L','E'],
-  [null,null,null,null,null,null,'A',null,null,null,null,null,null,null],
-  ['S','U','P','E','R','M','A','R','K','T',null,null,null,null],
-  [null,null,null,null,null,null,'I',null,null,null,null,null,null,null],
-  ['B','E','T','T','S','P','O','R','T',null,null,null,null,null],
-  [null,null,null,null,null,null,'M',null,null,null,null,null,null,null],
-  ['A','N','I','M','E',null,'E',null,null,null,null,null,null,null],
-  [null,null,null,null,null,null,null,null,null,null,null,null,null,null],
-  ['L','I','E','B','E',null,null,null,null,null,null,null,null,null],
-  [null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+/* 🧩 ALLE WÖRTER */
+const words = [
+  "GENSHIN",
+  "ANIME",
+  "LIEBE",
+  "BETTSPORT",
+  "COMPUTERSPIELE",
+  "SUPERMARKT",
+  "OBSESSED",
+  "FAMILIE",
+  "HERZSCHLAG",
+  "ORGASMUS",
+  "HÖHEPUNKT",
+  "SPIELZEUG",
+  "WIFE",
+  "HUSBAND",
+  "ZELDA",
+  "LINK",
+  "SILAS",
+  "DOKOMI",
+  "ANKETTEN"
 ]
 
-const user = reactive(
-  Array.from({ length: solution.length }, () =>
-    Array.from({ length: solution[0].length }, () => '')
+/* 🧠 GRID */
+function createGrid(size = 25) {
+  return Array.from({ length: size }, () =>
+    Array.from({ length: size }, () => null)
+  )
+}
+
+/* check fit */
+function canPlace(grid, word, x, y, dir) {
+  for (let i = 0; i < word.length; i++) {
+    let nx = x + (dir === 'across' ? i : 0)
+    let ny = y + (dir === 'down' ? i : 0)
+
+    if (!grid[ny] || !grid[ny][nx]) continue
+    if (grid[ny][nx] && grid[ny][nx] !== word[i]) return false
+  }
+  return true
+}
+
+/* place word */
+function place(grid, word, x, y, dir) {
+  for (let i = 0; i < word.length; i++) {
+    let nx = x + (dir === 'across' ? i : 0)
+    let ny = y + (dir === 'down' ? i : 0)
+    grid[ny][nx] = word[i]
+  }
+}
+
+/* generate */
+function generate(words) {
+  const grid = createGrid(25)
+
+  words = [...words].sort((a, b) => b.length - a.length)
+
+  const placed = []
+
+  place(grid, words[0], 5, 5, 'across')
+  placed.push({ word: words[0], x: 5, y: 5, dir: 'across' })
+
+  for (let w = 1; w < words.length; w++) {
+    const word = words[w]
+    let ok = false
+
+    for (let p of placed) {
+      for (let i = 0; i < p.word.length; i++) {
+        for (let j = 0; j < word.length; j++) {
+          if (p.word[i] === word[j]) {
+
+            let x = p.x + (p.dir === 'across' ? i : 0) - j
+            let y = p.y + (p.dir === 'down' ? i : 0) - j
+
+            let dir = p.dir === 'across' ? 'down' : 'across'
+
+            if (canPlace(grid, word, x, y, dir)) {
+              place(grid, word, x, y, dir)
+              placed.push({ word, x, y, dir })
+              ok = true
+              break
+            }
+          }
+        }
+        if (ok) break
+      }
+      if (ok) break
+    }
+  }
+
+  return { grid, placed }
+}
+
+/* 🧩 BUILD */
+const { grid: solution, placed } = generate(words)
+
+/* 🧠 NUMBERING */
+function getNumberMap(grid, placed) {
+  const map = {}
+  let num = 1
+
+  for (let p of placed) {
+    const x = p.x
+    const y = p.y
+
+    const beforeX = x - 1
+    const beforeY = y - 1
+
+    const isStart =
+      !grid[y - (p.dir === 'down' ? 1 : 0)]?.[x - (p.dir === 'across' ? 1 : 0)]
+
+    if (isStart) {
+      map[`${y},${x}`] = num++
+    }
+  }
+
+  return map
+}
+
+const numbers = getNumberMap(solution, placed)
+
+/* USER INPUT */
+const user = ref(
+  solution.map(row =>
+    row.map(cell => (cell ? '' : null))
   )
 )
 
+/* CHECK */
 const solved = computed(() => {
   for (let y = 0; y < solution.length; y++) {
     for (let x = 0; x < solution[y].length; x++) {
       if (solution[y][x]) {
-        if (user[y][x].toUpperCase() !== solution[y][x]) {
+        if (user.value[y][x].toUpperCase() !== solution[y][x]) {
           return false
         }
       }
@@ -49,7 +149,7 @@ const solved = computed(() => {
 <template>
 
 <button class="love-button" @click="show = true">
-  ❤️ Nachricht
+  ❤️ Rätsel öffnen
 </button>
 
 <div v-if="show" class="overlay">
@@ -57,58 +157,68 @@ const solved = computed(() => {
 
     <h2>🧩 Kreuzworträtsel</h2>
 
-    <!-- 🧠 HINTS (JETZT WIRKLICH HINTS, KEINE WÖRTER!) -->
+    <!-- 🧠 HINTS (NUMMERIERT) -->
     <div class="hints">
       <h3>Hinweise</h3>
       <ul>
-        <li>🎮 Etwas das man am PC spielt</li>
-        <li>🛒 Ort zum Einkaufen</li>
-        <li>🛏️ „Sport“ im Bett 😏</li>
-        <li>🍜 Japanische Animationsform</li>
-        <li>❤️ Gefühl zwischen zwei Menschen</li>
-        <li>👨‍👩‍👧 Gruppe von Menschen die zusammengehören</li>
+        <li>1 → Unser Lieblingsspiel 🎮</li>
+        <li>2 → Japanische Animation 🍜</li>
+        <li>3 → Gefühl zwischen Menschen ❤️</li>
+        <li>4 → Bett... Sport 😏</li>
+        <li>5 → Großes PC-Spiel 🎮</li>
+        <li>6 → Ort zum Einkaufen 🛒</li>
+        <li>7 → Fixierung / „verliebt sein in Idee“ 😏</li>
+        <li>8 → Familie 👨‍👩‍👧</li>
+        <li>9 → Puls im Körper 💓</li>
+        <li>10 → Erwachsener Begriff 😳</li>
+        <li>11 → Peak / Gipfel 📈</li>
+        <li>12 → Spielzeug 🧸</li>
+        <li>13 → Du ❤️</li>
+        <li>14 → Ich 😏</li>
+        <li>15 → Zelda 🗡️</li>
+        <li>16 → Link 🗡️</li>
+        <li>17 → Hund 🐶</li>
+        <li>18 → Event 🇯🇵</li>
+        <li>19 → Fesseln 🔗</li>
       </ul>
     </div>
 
     <!-- GRID -->
     <div class="grid">
       <div v-for="(row,y) in solution" :key="y" class="row">
+
         <div
           v-for="(cell,x) in row"
           :key="x"
           class="cell"
           :class="{ black: !cell }"
         >
+
+          <!-- number -->
+          <span v-if="numbers[`${y},${x}`]" class="num">
+            {{ numbers[`${y},${x}`] }}
+          </span>
+
           <input
             v-if="cell"
             v-model="user[y][x]"
             maxlength="1"
           />
+
         </div>
+
       </div>
     </div>
 
-    <!-- CHECK -->
-    <button class="check" @click="reveal = true">
-      Prüfen ❤️
+    <button class="check" @click="alert(solved ? '💖 RICHTIG!' : '😏 noch nicht')">
+      Prüfen
     </button>
 
-    <!-- REVEAL -->
-    <div v-if="reveal" class="result">
-
-      <div v-if="solved" class="win">
-        💖 Perfekt!
-        <h1>MY WIFE ❤️</h1>
-        <div class="hearts">💞💞💞</div>
-      </div>
-
-      <div v-else class="fail">
-        😏 Noch nicht alles richtig
-      </div>
-
+    <div v-if="solved" class="win">
+      💖 MY WIFE ❤️
     </div>
 
-    <button class="close" @click="show = false">
+    <button @click="show = false">
       Schließen
     </button>
 
@@ -118,15 +228,16 @@ const solved = computed(() => {
 </template>
 
 <style scoped>
+
 .love-button{
   position:fixed;
   bottom:20px;
   right:20px;
   background:#ff5c8a;
   border:none;
-  border-radius:30px;
   padding:14px;
-  font-size:28px;
+  border-radius:30px;
+  font-size:24px;
   color:white;
   z-index:9999;
 }
@@ -149,7 +260,6 @@ const solved = computed(() => {
   width:min(900px,95vw);
   max-height:90vh;
   overflow:auto;
-  text-align:center;
 }
 
 .hints{
@@ -171,48 +281,30 @@ const solved = computed(() => {
 }
 
 .cell{
-  width:26px;
-  height:26px;
+  width:30px;
+  height:30px;
   border:1px solid #444;
-  display:flex;
-  justify-content:center;
-  align-items:center;
+  position:relative;
   background:white;
 }
 
 .cell.black{
   background:black;
-  border:1px solid black;
 }
 
 input{
   width:100%;
   height:100%;
-  text-align:center;
   border:none;
+  text-align:center;
   font-weight:bold;
-  outline:none;
 }
 
-.check{
-  margin-top:10px;
-}
-
-.win{
-  color:#ff4fa3;
-}
-
-.hearts{
-  font-size:24px;
-  animation: float 1s infinite alternate;
-}
-
-.fail{
-  color:yellow;
-}
-
-@keyframes float{
-  0%{transform:translateY(0)}
-  100%{transform:translateY(-6px)}
+.num{
+  position:absolute;
+  top:1px;
+  left:2px;
+  font-size:10px;
+  color:black;
 }
 </style>
