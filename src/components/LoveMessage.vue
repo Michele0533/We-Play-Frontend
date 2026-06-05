@@ -77,27 +77,27 @@ function emptyGrid() {
 }
 
 function canPlace(grid, word, x, y, dir) {
-  word = (word || "").toUpperCase()
+  const w = (word || "").toUpperCase()
 
-  for (let i = 0; i < word.length; i++) {
+  for (let i = 0; i < w.length; i++) {
     const nx = x + (dir === 'across' ? i : 0)
     const ny = y + (dir === 'down' ? i : 0)
 
     if (!grid[ny] || nx < 0 || ny < 0 || nx >= SIZE || ny >= SIZE) return false
 
     const cell = grid[ny][nx]
-    if (cell && cell !== word[i]) return false
+    if (cell && cell !== w[i]) return false
   }
   return true
 }
 
 function place(grid, word, x, y, dir) {
-  word = (word || "").toUpperCase()
+  const w = (word || "").toUpperCase()
 
-  for (let i = 0; i < word.length; i++) {
+  for (let i = 0; i < w.length; i++) {
     const nx = x + (dir === 'across' ? i : 0)
     const ny = y + (dir === 'down' ? i : 0)
-    grid[ny][nx] = word[i]
+    grid[ny][nx] = w[i]
   }
 }
 
@@ -188,7 +188,7 @@ function moveNext(event, y, x) {
 }
 
 /* =========================
-   SOLVED CHECK (FIXED)
+   SOLVED (FIXED)
 ========================= */
 const solved = computed(() => {
   for (let y = 0; y < solution.length; y++) {
@@ -207,15 +207,14 @@ const solved = computed(() => {
 })
 
 /* =========================
-   COLOR CHECKS (FIXED)
+   COLORS (FIXED)
 ========================= */
 function isWrong(y, x) {
   if (!reveal.value) return false
   const correct = solution[y][x]
   if (!correct) return false
 
-  const input = (user.value[y][x] || "").toUpperCase()
-  return input !== correct
+  return (user.value[y][x] || "").toUpperCase() !== correct
 }
 
 function isCorrect(y, x) {
@@ -223,8 +222,7 @@ function isCorrect(y, x) {
   const correct = solution[y][x]
   if (!correct) return false
 
-  const input = (user.value[y][x] || "").toUpperCase()
-  return input === correct
+  return (user.value[y][x] || "").toUpperCase() === correct
 }
 </script>
 
@@ -312,15 +310,12 @@ function isCorrect(y, x) {
   color:white;
   padding:20px;
   border-radius:16px;
-  max-height:90vh;
-  overflow:auto;
 }
 
 .cell{
   width:30px;
   height:30px;
   border:1px solid #444;
-  position:relative;
   background:white;
 }
 
