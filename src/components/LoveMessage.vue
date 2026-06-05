@@ -1,9 +1,15 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, reactive, computed } from 'vue'
 
-const show = ref(false)
+/* =========================
+   BUTTON STATE (OLD STYLE)
+========================= */
+const showMessage = ref(false)
+const reveal = ref(false)
 
-/* 🧩 ALLE WÖRTER */
+/* =========================
+   WORDS
+========================= */
 const words = [
   "GENSHIN",
   "ANIME",
@@ -26,61 +32,59 @@ const words = [
   "ANKETTEN"
 ]
 
-/* 🧠 GRID */
+/* =========================
+   CROSSWORD ENGINE
+========================= */
 function createGrid(size = 25) {
   return Array.from({ length: size }, () =>
     Array.from({ length: size }, () => null)
   )
 }
 
-/* check fit */
 function canPlace(grid, word, x, y, dir) {
   for (let i = 0; i < word.length; i++) {
-    let nx = x + (dir === 'across' ? i : 0)
-    let ny = y + (dir === 'down' ? i : 0)
+    const nx = x + (dir === 'across' ? i : 0)
+    const ny = y + (dir === 'down' ? i : 0)
 
-    if (!grid[ny] || !grid[ny][nx]) continue
-    if (grid[ny][nx] && grid[ny][nx] !== word[i]) return false
+    if (!grid[ny] || grid[ny][nx] === undefined) return false
+
+    const cell = grid[ny][nx]
+    if (cell && cell !== word[i]) return false
   }
   return true
 }
 
-/* place word */
-function place(grid, word, x, y, dir) {
+function placeWord(grid, word, x, y, dir) {
   for (let i = 0; i < word.length; i++) {
-    let nx = x + (dir === 'across' ? i : 0)
-    let ny = y + (dir === 'down' ? i : 0)
+    const nx = x + (dir === 'across' ? i : 0)
+    const ny = y + (dir === 'down' ? i : 0)
     grid[ny][nx] = word[i]
   }
 }
 
-/* generate */
 function generate(words) {
   const grid = createGrid(25)
-
-  words = [...words].sort((a, b) => b.length - a.length)
-
   const placed = []
 
-  place(grid, words[0], 5, 5, 'across')
-  placed.push({ word: words[0], x: 5, y: 5, dir: 'across' })
+  const sorted = [...words].sort((a, b) => b.length - a.length)
 
-  for (let w = 1; w < words.length; w++) {
-    const word = words[w]
+  placeWord(grid, sorted[0], 5, 5, 'across')
+  placed.push({ word: sorted[0], x: 5, y: 5, dir: 'across' })
+
+  for (let w = 1; w < sorted.length; w++) {
+    const word = sorted[w]
     let ok = false
 
-    for (let p of placed) {
+    for (const p of placed) {
       for (let i = 0; i < p.word.length; i++) {
         for (let j = 0; j < word.length; j++) {
           if (p.word[i] === word[j]) {
-
-            let x = p.x + (p.dir === 'across' ? i : 0) - j
-            let y = p.y + (p.dir === 'down' ? i : 0) - j
-
-            let dir = p.dir === 'across' ? 'down' : 'across'
+            const x = p.x + (p.dir === 'across' ? i : 0) - j
+            const y = p.y + (p.dir === 'down' ? i : 0) - j
+            const dir = p.dir === 'across' ? 'down' : 'across'
 
             if (canPlace(grid, word, x, y, dir)) {
-              place(grid, word, x, y, dir)
+              placeWord(grid, word, x, y, dir)
               placed.push({ word, x, y, dir })
               ok = true
               break
@@ -96,42 +100,44 @@ function generate(words) {
   return { grid, placed }
 }
 
-/* 🧩 BUILD */
 const { grid: solution, placed } = generate(words)
 
-/* 🧠 NUMBERING */
-function getNumberMap(grid, placed) {
+/* =========================
+   NUMBERING (1→ style)
+========================= */
+function buildNumbers(grid, placed) {
   const map = {}
-  let num = 1
+  let n = 1
 
-  for (let p of placed) {
-    const x = p.x
-    const y = p.y
+  for (const p of placed) {
+    const startX = p.x
+    const startY = p.y
 
-    const beforeX = x - 1
-    const beforeY = y - 1
+    const left = grid[startY]?.[startX - 1]
+    const top = grid[startY - 1]?.[startX]
 
-    const isStart =
-      !grid[y - (p.dir === 'down' ? 1 : 0)]?.[x - (p.dir === 'across' ? 1 : 0)]
-
-    if (isStart) {
-      map[`${y},${x}`] = num++
+    if (!left && !top) {
+      map[`${startY},${startX}`] = n++
     }
   }
 
   return map
 }
 
-const numbers = getNumberMap(solution, placed)
+const numbers = buildNumbers(solution, placed)
 
-/* USER INPUT */
+/* =========================
+   USER INPUT GRID
+========================= */
 const user = ref(
   solution.map(row =>
     row.map(cell => (cell ? '' : null))
   )
 )
 
-/* CHECK */
+/* =========================
+   CHECK
+========================= */
 const solved = computed(() => {
   for (let y = 0; y < solution.length; y++) {
     for (let x = 0; x < solution[y].length; x++) {
@@ -148,53 +154,44 @@ const solved = computed(() => {
 
 <template>
 
-<button class="love-button" @click="show = true">
-  ❤️ Rätsel öffnen
+<!-- ✅ ORIGINAL BUTTON (RESTORED) -->
+<button class="love-button" @click="showMessage = true">
+  ❤️ Nachricht
 </button>
 
-<div v-if="show" class="overlay">
+<!-- POPUP -->
+<div v-if="showMessage" class="overlay">
   <div class="popup">
 
     <h2>🧩 Kreuzworträtsel</h2>
 
-    <!-- 🧠 HINTS (NUMMERIERT) -->
+    <!-- HINTS -->
     <div class="hints">
       <h3>Hinweise</h3>
       <ul>
-        <li>1 → Unser Lieblingsspiel 🎮</li>
-        <li>2 → Japanische Animation 🍜</li>
-        <li>3 → Gefühl zwischen Menschen ❤️</li>
-        <li>4 → Bett... Sport 😏</li>
-        <li>5 → Großes PC-Spiel 🎮</li>
-        <li>6 → Ort zum Einkaufen 🛒</li>
-        <li>7 → Fixierung / „verliebt sein in Idee“ 😏</li>
-        <li>8 → Familie 👨‍👩‍👧</li>
-        <li>9 → Puls im Körper 💓</li>
-        <li>10 → Erwachsener Begriff 😳</li>
-        <li>11 → Peak / Gipfel 📈</li>
-        <li>12 → Spielzeug 🧸</li>
-        <li>13 → Du ❤️</li>
-        <li>14 → Ich 😏</li>
-        <li>15 → Zelda 🗡️</li>
-        <li>16 → Link 🗡️</li>
-        <li>17 → Hund 🐶</li>
-        <li>18 → Event 🇯🇵</li>
-        <li>19 → Fesseln 🔗</li>
+        <li>🎮 Unser Lieblingsspiel</li>
+        <li>🍜 Anime</li>
+        <li>❤️ Liebe</li>
+        <li>👨‍👩‍👧 Familie</li>
+        <li>🛒 Supermarkt</li>
+        <li>🛏️ Bettsport</li>
+        <li>📈 Höhepunkt</li>
+        <li>💓 Herzschlag</li>
+        <li>🧸 Spielzeug</li>
+        <li>😏 Obsesssed</li>
+        <li>🎮 Genshin / Zelda / Link</li>
       </ul>
     </div>
 
     <!-- GRID -->
     <div class="grid">
       <div v-for="(row,y) in solution" :key="y" class="row">
-
         <div
           v-for="(cell,x) in row"
           :key="x"
           class="cell"
           :class="{ black: !cell }"
         >
-
-          <!-- number -->
           <span v-if="numbers[`${y},${x}`]" class="num">
             {{ numbers[`${y},${x}`] }}
           </span>
@@ -204,21 +201,27 @@ const solved = computed(() => {
             v-model="user[y][x]"
             maxlength="1"
           />
-
         </div>
-
       </div>
     </div>
 
-    <button class="check" @click="alert(solved ? '💖 RICHTIG!' : '😏 noch nicht')">
-      Prüfen
+    <!-- CHECK -->
+    <button class="check" @click="reveal = true">
+      Prüfen ❤️
     </button>
 
-    <div v-if="solved" class="win">
-      💖 MY WIFE ❤️
+    <!-- RESULT -->
+    <div v-if="reveal">
+      <div v-if="solved" class="win">
+        💖 MY WIFE ❤️
+      </div>
+      <div v-else class="fail">
+        😏 Noch nicht alles richtig
+      </div>
     </div>
 
-    <button @click="show = false">
+    <!-- CLOSE -->
+    <button @click="showMessage = false">
       Schließen
     </button>
 
@@ -229,19 +232,21 @@ const solved = computed(() => {
 
 <style scoped>
 
+/* BUTTON (OLD SAFE STYLE) */
 .love-button{
   position:fixed;
   bottom:20px;
   right:20px;
   background:#ff5c8a;
   border:none;
-  padding:14px;
+  padding:14px 18px;
   border-radius:30px;
-  font-size:24px;
+  font-size:22px;
   color:white;
   z-index:9999;
 }
 
+/* OVERLAY */
 .overlay{
   position:fixed;
   inset:0;
@@ -252,6 +257,7 @@ const solved = computed(() => {
   z-index:9998;
 }
 
+/* POPUP */
 .popup{
   background:#222;
   color:white;
@@ -262,14 +268,7 @@ const solved = computed(() => {
   overflow:auto;
 }
 
-.hints{
-  text-align:left;
-  background:#111;
-  padding:10px;
-  border-radius:10px;
-  margin-bottom:15px;
-}
-
+/* GRID */
 .grid{
   display:flex;
   flex-direction:column;
@@ -306,5 +305,15 @@ input{
   left:2px;
   font-size:10px;
   color:black;
+}
+
+/* RESULT */
+.win{
+  color:#ff4fa3;
+  font-size:22px;
+}
+
+.fail{
+  color:yellow;
 }
 </style>
