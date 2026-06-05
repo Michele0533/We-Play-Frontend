@@ -1,11 +1,14 @@
 <script setup>
 import { ref, reactive, computed } from 'vue'
 
+/* =========================
+   POPUP STATE (ORIGINAL)
+========================= */
 const showMessage = ref(false)
 const reveal = ref(false)
 
 /* =========================
-   ALL WORDS (UNCHANGED)
+   WORDS
 ========================= */
 const words = [
   "GENSHIN",
@@ -18,7 +21,6 @@ const words = [
   "FAMILIE",
   "HERZSCHLAG",
   "ORGASMUS",
-  "HÖHEPUNKT",
   "SPIELZEUG",
   "WIFE",
   "HUSBAND",
@@ -26,11 +28,39 @@ const words = [
   "LINK",
   "SILAS",
   "DOKOMI",
-  "ANKETTEN"
+  "ANKETTEN",
+   "Wolf",
+   "Stöhnen"
 ]
 
 /* =========================
-   GRID
+   CLUES (DEINE HINTS)
+========================= */
+const clueMap = {
+  GENSHIN: "Unser Lieblingsspiel 🎮",
+  ANIME: "Seriengenre aus Japan 🍜",
+  LIEBE: "Starkes Gefühl zwischen dir und mir❤️",
+  BETTSPORT: "😏 im Bett mit dir honey",
+  COMPUTERSPIELE: "Was wir jeden tag machen",
+  SUPERMARKT: "Pingolf",
+  OBSESSED: "das was ich mit dir bin",
+  FAMILIE: "Du, ich und eine Mini von dir",
+  HERZSCHLAG: "Puls im Körper 💓",
+  ORGASMUS: "Höhepunkt 😳",
+  SPIELZEUG: "Dinge die man ins bett nehmen kann^^",
+  WIFE: "du ❤️",
+  HUSBAND: "ich 😏",
+  ZELDA: "Deinliebligns spiel",
+  LINK: "Held aus Zelda 🗡️",
+  SILAS: "kleiner Racker 🐶",
+  DOKOMI: "Anime Convention 🇯🇵",
+  ANKETTEN: "unser insider",
+   Wolf: "dein lieblingstier",
+   Stöhnen: "Dein tolles atmen, wenn ich an dir rumspiele"
+}
+
+/* =========================
+   GRID ENGINE
 ========================= */
 const SIZE = 30
 
@@ -40,9 +70,6 @@ function emptyGrid() {
   )
 }
 
-/* =========================
-   PLACEMENT CHECK
-========================= */
 function canPlace(grid, word, x, y, dir) {
   for (let i = 0; i < word.length; i++) {
     const nx = x + (dir === 'across' ? i : 0)
@@ -56,9 +83,6 @@ function canPlace(grid, word, x, y, dir) {
   return true
 }
 
-/* =========================
-   PLACE WORD
-========================= */
 function place(grid, word, x, y, dir) {
   for (let i = 0; i < word.length; i++) {
     const nx = x + (dir === 'across' ? i : 0)
@@ -68,64 +92,45 @@ function place(grid, word, x, y, dir) {
 }
 
 /* =========================
-   SIMPLE BACKTRACK-LIKE GENERATION
-   (retry until all fit or near-perfect)
+   GENERATE (retry safe)
 ========================= */
 function generate(words) {
-  let best = null
+  const grid = emptyGrid()
+  const placed = []
 
-  for (let attempt = 0; attempt < 50; attempt++) {
-    const grid = emptyGrid()
-    const placed = []
+  const sorted = [...words].sort((a, b) => b.length - a.length)
 
-    const sorted = [...words].sort((a, b) => b.length - a.length)
+  place(grid, sorted[0], 10, 10, 'across')
+  placed.push({ word: sorted[0], x: 10, y: 10, dir: 'across' })
 
-    place(grid, sorted[0], 10, 10, 'across')
-    placed.push({ word: sorted[0], x: 10, y: 10, dir: 'across' })
+  for (let w = 1; w < sorted.length; w++) {
+    const word = sorted[w]
+    let ok = false
 
-    let success = true
+    for (const p of placed) {
+      for (let i = 0; i < p.word.length; i++) {
+        for (let j = 0; j < word.length; j++) {
+          if (p.word[i] === word[j]) {
 
-    for (let w = 1; w < sorted.length; w++) {
-      const word = sorted[w]
-      let placedOk = false
+            const x = p.x + (p.dir === 'across' ? i : 0) - j
+            const y = p.y + (p.dir === 'down' ? i : 0) - j
+            const dir = p.dir === 'across' ? 'down' : 'across'
 
-      for (let p of placed) {
-        for (let i = 0; i < p.word.length; i++) {
-          for (let j = 0; j < word.length; j++) {
-            if (p.word[i] === word[j]) {
-
-              const x = p.x + (p.dir === 'across' ? i : 0) - j
-              const y = p.y + (p.dir === 'down' ? i : 0) - j
-              const dir = p.dir === 'across' ? 'down' : 'across'
-
-              if (canPlace(grid, word, x, y, dir)) {
-                place(grid, word, x, y, dir)
-                placed.push({ word, x, y, dir })
-                placedOk = true
-                break
-              }
+            if (canPlace(grid, word, x, y, dir)) {
+              place(grid, word, x, y, dir)
+              placed.push({ word, x, y, dir })
+              ok = true
+              break
             }
           }
-          if (placedOk) break
         }
-        if (placedOk) break
+        if (ok) break
       }
-
-      if (!placedOk) {
-        success = false
-        break
-      }
+      if (ok) break
     }
-
-    if (success) {
-      best = { grid, placed }
-      break
-    }
-
-    best = { grid, placed }
   }
 
-  return best
+  return { grid, placed }
 }
 
 const { grid: solution, placed } = generate(words)
@@ -133,33 +138,32 @@ const { grid: solution, placed } = generate(words)
 /* =========================
    NUMBERS + ARROWS
 ========================= */
-function buildMeta(placed) {
-  let n = 1
-  const map = {}
-  const meta = []
+const startMap = {}
+let counter = 1
 
-  for (const p of placed) {
-    const key = `${p.y},${p.x}`
+for (const p of placed) {
+  const key = `${p.y},${p.x}`
 
-    if (!map[key]) {
-      map[key] = {
-        num: n++,
-        arrows: []
-      }
+  if (!startMap[key]) {
+    startMap[key] = {
+      num: counter++,
+      arrows: []
     }
-
-    map[key].arrows.push(p.dir === 'across' ? '→' : '↓')
-
-    meta.push({
-      ...p,
-      num: map[key].num
-    })
   }
 
-  return { map, meta }
+  startMap[key].arrows.push(p.dir === 'across' ? '→' : '↓')
 }
 
-const { map: numbers, meta: clues } = buildMeta(placed)
+/* =========================
+   CLUES
+========================= */
+const clues = placed.map((p, i) => {
+  return {
+    num: i + 1,
+    dir: p.dir === 'across' ? '→' : '↓',
+    text: clueMap[p.word] || p.word
+  }
+})
 
 /* =========================
    USER GRID
@@ -189,7 +193,7 @@ const solved = computed(() => {
 
 <template>
 
-<!-- ORIGINAL BUTTON -->
+<!-- BUTTON -->
 <button class="love-button" @click="showMessage = true">
   ❤️ Nachricht
 </button>
@@ -200,12 +204,12 @@ const solved = computed(() => {
 
     <h2>🧩 Kreuzworträtsel</h2>
 
-    <!-- HINTS (NOW REAL CLUES) -->
+    <!-- CLUES -->
     <div class="hints">
       <h3>Hinweise</h3>
       <ul>
-        <li v-for="c in clues" :key="c.word">
-          {{ c.num }} {{ c.dir }} {{ c.word.length }} Buchstaben
+        <li v-for="c in clues" :key="c.num">
+          {{ c.num }} {{ c.dir }} {{ c.text }}
         </li>
       </ul>
     </div>
@@ -221,8 +225,13 @@ const solved = computed(() => {
           :class="{ black: !cell }"
         >
 
-          <div v-if="numbers[`${y},${x}`]" class="num">
-            {{ numbers[`${y},${x}`].num }}
+          <div v-if="startMap[`${y},${x}`]" class="meta">
+            <span class="num">
+              {{ startMap[`${y},${x}`].num }}
+            </span>
+            <span class="arrow">
+              {{ startMap[`${y},${x}`].arrows.join('') }}
+            </span>
           </div>
 
           <input
@@ -236,6 +245,7 @@ const solved = computed(() => {
       </div>
     </div>
 
+    <!-- CHECK -->
     <button class="check" @click="reveal = true">
       Prüfen ❤️
     </button>
@@ -249,6 +259,7 @@ const solved = computed(() => {
       </div>
     </div>
 
+    <!-- CLOSE -->
     <button @click="showMessage = false">
       Schließen
     </button>
@@ -280,7 +291,6 @@ const solved = computed(() => {
   display:flex;
   justify-content:center;
   align-items:center;
-  z-index:9998;
 }
 
 .popup{
@@ -323,20 +333,27 @@ input{
   font-weight:bold;
 }
 
-.num{
+.meta{
   position:absolute;
   top:1px;
   left:2px;
-  font-size:10px;
+  font-size:9px;
+  display:flex;
+  gap:2px;
   color:black;
 }
 
-.hints ul{
-  text-align:left;
+.num{
+  font-weight:bold;
+}
+
+.arrow{
+  opacity:0.8;
 }
 
 .win{
   color:#ff4fa3;
+  font-size:22px;
 }
 
 .fail{
