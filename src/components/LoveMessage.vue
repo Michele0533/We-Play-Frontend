@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, watch } from "vue"
 
-/* ========================= POPUP STATE ========================= */
+/* ========================= STATE ========================= */
 const showMessage = ref(false)
 const reveal = ref(false)
 
@@ -34,28 +34,28 @@ const words = [
   "STÖHNEN"
 ]
 
-/* ========================= CLUE MAP ========================= */
+/* ========================= HINTS ========================= */
 const clueMap = {
   GENSHIN: "Unser Lieblingsspiel 🎮",
   ANIME: "Seriengenre aus Japan 🍜",
   LIEBE: "Starkes Gefühl zwischen dir und mir❤️",
   BETTSPORT: "😏 im Bett mit dir honey",
-  COMPUTERSPIELE: "Was wir jeden tag machen",
+  COMPUTERSPIELE: "Was wir jeden Tag machen",
   SUPERMARKT: "Pingolf",
   OBSESSED: "das was ich mit dir bin",
   FAMILIE: "Du, ich und eine Mini von dir",
   HERZSCHLAG: "Puls im Körper 💓",
   ORGASMUS: "Höhepunkt 😳",
-  SPIELZEUG: "Dinge die man ins bett nehmen kann^^",
+  SPIELZEUG: "Dinge die man ins Bett nimmt",
   WIFE: "du ❤️",
   HUSBAND: "ich 😏",
-  ZELDA: "Dein lieblings spiel",
+  ZELDA: "Dein Lieblingsspiel",
   LINK: "Held aus Zelda 🗡️",
   SILAS: "kleiner Racker 🐶",
   DOKOMI: "Anime Convention 🇯🇵",
-  ANKETTEN: "unser insider",
-  WOLF: "dein lieblingstier",
-  STÖHNEN: "Dein tolles atmen 😏"
+  ANKETTEN: "unser Insider",
+  WOLF: "dein Lieblingstier",
+  STÖHNEN: "dein süßes Atmen 😏"
 }
 
 /* ========================= NORMALIZE ========================= */
@@ -69,7 +69,7 @@ const normalize = (str) =>
     .replace(/Ö/g, "O")
     .replace(/Ü/g, "U")
 
-/* ========================= GRID ENGINE ========================= */
+/* ========================= GRID ========================= */
 const SIZE = 30
 
 function emptyGrid() {
@@ -149,7 +149,7 @@ function generate(words) {
 
 const { grid: solution, placed } = generate(words)
 
-/* ========================= START MAP ========================= */
+/* ========================= MAPS ========================= */
 const startMap = {}
 const startLetters = {}
 
@@ -279,15 +279,13 @@ function moveNext(event, y, x) {
   user.value[y][x] = key.toUpperCase()
 }
 
-/* ========================= CHECK COLOR ========================= */
+/* ========================= COLORS ========================= */
 function isWrong(y, x) {
   if (!reveal.value) return false
   const correct = solution[y][x]
   if (!correct) return false
 
-  return (
-    normalize(user.value[y][x]) !== normalize(correct)
-  )
+  return normalize(user.value[y][x]) !== normalize(correct)
 }
 
 function isCorrect(y, x) {
@@ -295,9 +293,7 @@ function isCorrect(y, x) {
   const correct = solution[y][x]
   if (!correct) return false
 
-  return (
-    normalize(user.value[y][x]) === normalize(correct)
-  )
+  return normalize(user.value[y][x]) === normalize(correct)
 }
 </script>
 
@@ -309,6 +305,17 @@ function isCorrect(y, x) {
   <div v-if="showMessage" class="overlay">
     <div class="popup">
       <h2>🧩 Kreuzworträtsel</h2>
+
+      <!-- HINT BOX -->
+      <div class="hints">
+        <h3>💡 Hinweise</h3>
+        <ul>
+          <li v-for="(c, i) in placed" :key="i">
+            {{ i + 1 }} {{ c.dir === "across" ? "→" : "↓" }}
+            {{ clueMap[c.word] }}
+          </li>
+        </ul>
+      </div>
 
       <div class="grid">
         <div v-for="(row, y) in solution" :key="y" class="row">
@@ -398,6 +405,24 @@ function isCorrect(y, x) {
   overflow: auto;
 }
 
+.hints {
+  margin-bottom: 15px;
+  padding: 10px;
+  border: 1px solid #444;
+  border-radius: 10px;
+  background: #2a2a2a;
+}
+
+.hints ul {
+  list-style: none;
+  padding: 0;
+}
+
+.hints li {
+  font-size: 14px;
+  padding: 3px 0;
+}
+
 .grid {
   display: flex;
   flex-direction: column;
@@ -426,7 +451,6 @@ input {
   border: none;
   text-align: center;
   font-weight: bold;
-  transition: all 0.2s ease;
 }
 
 input.wrong {
@@ -449,8 +473,6 @@ input.worddone {
   top: 1px;
   left: 2px;
   font-size: 9px;
-  display: flex;
-  gap: 2px;
   color: black;
 }
 
