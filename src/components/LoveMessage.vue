@@ -1,111 +1,104 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
-const showMessage = ref(false)
+const answers = ref({
+  genshin: '',
+  wife: '',
+  husband: '',
+  zelda: '',
+  link: '',
+  silas: '',
+  dokomi: '',
+  anketten: ''
+})
+
+const solved = computed(() => {
+  return (
+    answers.value.genshin.toLowerCase() === 'genshin' &&
+    answers.value.wife.toLowerCase() === 'wife' &&
+    answers.value.husband.toLowerCase() === 'husband' &&
+    answers.value.zelda.toLowerCase() === 'zelda' &&
+    answers.value.link.toLowerCase() === 'link' &&
+    answers.value.silas.toLowerCase() === 'silas' &&
+    answers.value.dokomi.toLowerCase() === 'dokomi' &&
+    answers.value.anketten.toLowerCase() === 'anketten'
+  )
+})
 </script>
 
 <template>
-  <!-- Button -->
-  <button class="love-button" @click="showMessage = true">
-    ❤️ Nachricht
-  </button>
+  <div class="crossword">
+    <h2>❤️ Unser kleines Kreuzworträtsel ❤️</h2>
 
-  <!-- Popup -->
-  <div v-if="showMessage" class="popup-overlay">
-    <div class="popup">
-      <h2>💌 Für dich</h2>
+    <div class="question">
+      <p>1. Unser Lieblingsspiel 🎮</p>
+      <input v-model="answers.genshin">
+    </div>
 
-      <p>
-        <strong>Tag 1 – Wie alles begann ❤️</strong>
-        <br><br>
+    <div class="question">
+      <p>2. Englisches Wort für Ehefrau</p>
+      <input v-model="answers.wife">
+    </div>
 
-        Nichts war unerwarteter als deine Liebe zu <strong>m</strong>ir. Ehrlicherweise muss man sagen,
-        dass es am Anfang nicht gerade danach aussah. Und dann entstand aus dem Nichts,
-        von beiden Seiten aus, diese Liebe. Nichts hätte mich glücklicher machen können.
-        <br><br>
+    <div class="question">
+      <p>3. Englisches Wort für Ehemann</p>
+      <input v-model="answers.husband">
+    </div>
 
-        Wh<strong>y</strong> hätte ich auch etwas anderes wollen können als dich? ❤️
-        <br><br>
+    <div class="question">
+      <p>4. Spielreihe mit Prinzessin Zelda</p>
+      <input v-model="answers.zelda">
+    </div>
 
-        Aus dem Spaß, dass du mich ankettest und zum Hund machst … einer von uns wird
-        angekettet und der andere ist der Hund. xD Wer hätte gedacht, dass daraus einmal
-        etwas so <strong>w</strong>underschönes entstehen würde?
-        <br><br>
+    <div class="question">
+      <p>5. Held aus Hyrule</p>
+      <input v-model="answers.link">
+    </div>
 
-        Als ich gemerkt habe, was für ein toller und <strong>i</strong>mmer besonderer Mensch du bist,
-        wollte ich nur noch dich.
-        <br><br>
+    <div class="question">
+      <p>6. Name des kleinen Rackers 🐶</p>
+      <input v-model="answers.silas">
+    </div>
 
-        Auch als du mir den kleinen Racker Silas vorgestellt hast, war alles wie in
-        einem Traum. 🥰 Vieles davon werde ich mir er<strong>f</strong>innern und nie vergessen.
-        <br><br>
+    <div class="question">
+      <p>7. Anime-Convention in Düsseldorf</p>
+      <input v-model="answers.dokomi">
+    </div>
 
-        Jetzt, wo ich diesen Text schreibe, hast du <strong>e<strong>ine schwere Zeit. Aber lass mich
-        deine Hand nehmen und dir zeigen, dass du dich bei mir ausruhen kannst,
-        my love. Lass deine Vergangenheit stehen, diese ist mir egal. ❤️
-        <br><br>
+    <div class="question">
+      <p>8. Unser lustiger Insider 😆</p>
+      <input v-model="answers.anketten">
+    </div>
 
-        Ich bin dankbar für das Schicksal, das uns an diesem Tag zusammengebracht hat.
-        Ich hätte niemals gedacht, dass Sayu-Streams einmal so wichtig für mein Leben w<strong>e</strong>rden würden.
-        <br><br>
-
-        Und egal, was kommt – ich bin froh, dass wir uns gefunden haben.
-        Ich liebe dich. ❤️
-
-        Findest du die versteckte nachricht ^^ 
-      </p>
-
-      <button class="close-button" @click="showMessage = false">
-        Schließen
-      </button>
+    <div v-if="solved" class="result">
+      💖 Herzlichen Glückwunsch! 💖
+      <h1>MY WIFE ❤️</h1>
     </div>
   </div>
 </template>
 
 <style scoped>
-.love-button {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  padding: 12px 18px;
-  border: none;
-  border-radius: 30px;
-  background: #ff5c8a;
-  color: white;
-  cursor: pointer;
-  font-size: 32px;
-  z-index: 1000;
-}
-
-.popup-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  z-index: 1001;
-}
-
-.popup {
-  background: gray;
+.crossword {
+  background: white;
   padding: 30px;
   border-radius: 20px;
-  max-width: 500px;
-  text-align: center;
-  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+  max-width: 700px;
 }
 
-.close-button {
-  margin-top: 20px;
-  padding: 10px 20px;
-  border: none;
+.question {
+  margin-bottom: 20px;
+}
+
+input {
+  width: 250px;
+  padding: 10px;
   border-radius: 10px;
-  cursor: pointer;
+  border: 2px solid #ff8db3;
+}
+
+.result {
+  margin-top: 30px;
+  text-align: center;
+  color: crimson;
 }
 </style>
