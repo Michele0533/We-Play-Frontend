@@ -1,14 +1,11 @@
 <script setup>
 import { ref, reactive, computed } from 'vue'
 
-/* =========================
-   BUTTON STATE (OLD STYLE)
-========================= */
 const showMessage = ref(false)
 const reveal = ref(false)
 
 /* =========================
-   WORDS
+   ALL WORDS (UNCHANGED)
 ========================= */
 const words = [
   "GENSHIN",
@@ -33,20 +30,25 @@ const words = [
 ]
 
 /* =========================
-   CROSSWORD ENGINE
+   GRID
 ========================= */
-function createGrid(size = 25) {
-  return Array.from({ length: size }, () =>
-    Array.from({ length: size }, () => null)
+const SIZE = 30
+
+function emptyGrid() {
+  return Array.from({ length: SIZE }, () =>
+    Array.from({ length: SIZE }, () => null)
   )
 }
 
+/* =========================
+   PLACEMENT CHECK
+========================= */
 function canPlace(grid, word, x, y, dir) {
   for (let i = 0; i < word.length; i++) {
     const nx = x + (dir === 'across' ? i : 0)
     const ny = y + (dir === 'down' ? i : 0)
 
-    if (!grid[ny] || grid[ny][nx] === undefined) return false
+    if (!grid[ny] || nx < 0 || ny < 0 || nx >= SIZE || ny >= SIZE) return false
 
     const cell = grid[ny][nx]
     if (cell && cell !== word[i]) return false
@@ -54,7 +56,10 @@ function canPlace(grid, word, x, y, dir) {
   return true
 }
 
-function placeWord(grid, word, x, y, dir) {
+/* =========================
+   PLACE WORD
+========================= */
+function place(grid, word, x, y, dir) {
   for (let i = 0; i < word.length; i++) {
     const nx = x + (dir === 'across' ? i : 0)
     const ny = y + (dir === 'down' ? i : 0)
@@ -62,72 +67,102 @@ function placeWord(grid, word, x, y, dir) {
   }
 }
 
+/* =========================
+   SIMPLE BACKTRACK-LIKE GENERATION
+   (retry until all fit or near-perfect)
+========================= */
 function generate(words) {
-  const grid = createGrid(25)
-  const placed = []
+  let best = null
 
-  const sorted = [...words].sort((a, b) => b.length - a.length)
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const grid = emptyGrid()
+    const placed = []
 
-  placeWord(grid, sorted[0], 5, 5, 'across')
-  placed.push({ word: sorted[0], x: 5, y: 5, dir: 'across' })
+    const sorted = [...words].sort((a, b) => b.length - a.length)
 
-  for (let w = 1; w < sorted.length; w++) {
-    const word = sorted[w]
-    let ok = false
+    place(grid, sorted[0], 10, 10, 'across')
+    placed.push({ word: sorted[0], x: 10, y: 10, dir: 'across' })
 
-    for (const p of placed) {
-      for (let i = 0; i < p.word.length; i++) {
-        for (let j = 0; j < word.length; j++) {
-          if (p.word[i] === word[j]) {
-            const x = p.x + (p.dir === 'across' ? i : 0) - j
-            const y = p.y + (p.dir === 'down' ? i : 0) - j
-            const dir = p.dir === 'across' ? 'down' : 'across'
+    let success = true
 
-            if (canPlace(grid, word, x, y, dir)) {
-              placeWord(grid, word, x, y, dir)
-              placed.push({ word, x, y, dir })
-              ok = true
-              break
+    for (let w = 1; w < sorted.length; w++) {
+      const word = sorted[w]
+      let placedOk = false
+
+      for (let p of placed) {
+        for (let i = 0; i < p.word.length; i++) {
+          for (let j = 0; j < word.length; j++) {
+            if (p.word[i] === word[j]) {
+
+              const x = p.x + (p.dir === 'across' ? i : 0) - j
+              const y = p.y + (p.dir === 'down' ? i : 0) - j
+              const dir = p.dir === 'across' ? 'down' : 'across'
+
+              if (canPlace(grid, word, x, y, dir)) {
+                place(grid, word, x, y, dir)
+                placed.push({ word, x, y, dir })
+                placedOk = true
+                break
+              }
             }
           }
+          if (placedOk) break
         }
-        if (ok) break
+        if (placedOk) break
       }
-      if (ok) break
+
+      if (!placedOk) {
+        success = false
+        break
+      }
     }
+
+    if (success) {
+      best = { grid, placed }
+      break
+    }
+
+    best = { grid, placed }
   }
 
-  return { grid, placed }
+  return best
 }
 
 const { grid: solution, placed } = generate(words)
 
 /* =========================
-   NUMBERING (1→ style)
+   NUMBERS + ARROWS
 ========================= */
-function buildNumbers(grid, placed) {
-  const map = {}
+function buildMeta(placed) {
   let n = 1
+  const map = {}
+  const meta = []
 
   for (const p of placed) {
-    const startX = p.x
-    const startY = p.y
+    const key = `${p.y},${p.x}`
 
-    const left = grid[startY]?.[startX - 1]
-    const top = grid[startY - 1]?.[startX]
-
-    if (!left && !top) {
-      map[`${startY},${startX}`] = n++
+    if (!map[key]) {
+      map[key] = {
+        num: n++,
+        arrows: []
+      }
     }
+
+    map[key].arrows.push(p.dir === 'across' ? '→' : '↓')
+
+    meta.push({
+      ...p,
+      num: map[key].num
+    })
   }
 
-  return map
+  return { map, meta }
 }
 
-const numbers = buildNumbers(solution, placed)
+const { map: numbers, meta: clues } = buildMeta(placed)
 
 /* =========================
-   USER INPUT GRID
+   USER GRID
 ========================= */
 const user = ref(
   solution.map(row =>
@@ -154,7 +189,7 @@ const solved = computed(() => {
 
 <template>
 
-<!-- ✅ ORIGINAL BUTTON (RESTORED) -->
+<!-- ORIGINAL BUTTON -->
 <button class="love-button" @click="showMessage = true">
   ❤️ Nachricht
 </button>
@@ -165,52 +200,46 @@ const solved = computed(() => {
 
     <h2>🧩 Kreuzworträtsel</h2>
 
-    <!-- HINTS -->
+    <!-- HINTS (NOW REAL CLUES) -->
     <div class="hints">
       <h3>Hinweise</h3>
       <ul>
-        <li>🎮 Unser Lieblingsspiel</li>
-        <li>🍜 Anime</li>
-        <li>❤️ Liebe</li>
-        <li>👨‍👩‍👧 Familie</li>
-        <li>🛒 Supermarkt</li>
-        <li>🛏️ Bettsport</li>
-        <li>📈 Höhepunkt</li>
-        <li>💓 Herzschlag</li>
-        <li>🧸 Spielzeug</li>
-        <li>😏 Obsesssed</li>
-        <li>🎮 Genshin / Zelda / Link</li>
+        <li v-for="c in clues" :key="c.word">
+          {{ c.num }} {{ c.dir }} {{ c.word.length }} Buchstaben
+        </li>
       </ul>
     </div>
 
     <!-- GRID -->
     <div class="grid">
       <div v-for="(row,y) in solution" :key="y" class="row">
+
         <div
           v-for="(cell,x) in row"
           :key="x"
           class="cell"
           :class="{ black: !cell }"
         >
-          <span v-if="numbers[`${y},${x}`]" class="num">
-            {{ numbers[`${y},${x}`] }}
-          </span>
+
+          <div v-if="numbers[`${y},${x}`]" class="num">
+            {{ numbers[`${y},${x}`].num }}
+          </div>
 
           <input
             v-if="cell"
             v-model="user[y][x]"
             maxlength="1"
           />
+
         </div>
+
       </div>
     </div>
 
-    <!-- CHECK -->
     <button class="check" @click="reveal = true">
       Prüfen ❤️
     </button>
 
-    <!-- RESULT -->
     <div v-if="reveal">
       <div v-if="solved" class="win">
         💖 MY WIFE ❤️
@@ -220,7 +249,6 @@ const solved = computed(() => {
       </div>
     </div>
 
-    <!-- CLOSE -->
     <button @click="showMessage = false">
       Schließen
     </button>
@@ -232,7 +260,6 @@ const solved = computed(() => {
 
 <style scoped>
 
-/* BUTTON (OLD SAFE STYLE) */
 .love-button{
   position:fixed;
   bottom:20px;
@@ -246,7 +273,6 @@ const solved = computed(() => {
   z-index:9999;
 }
 
-/* OVERLAY */
 .overlay{
   position:fixed;
   inset:0;
@@ -257,7 +283,6 @@ const solved = computed(() => {
   z-index:9998;
 }
 
-/* POPUP */
 .popup{
   background:#222;
   color:white;
@@ -268,7 +293,6 @@ const solved = computed(() => {
   overflow:auto;
 }
 
-/* GRID */
 .grid{
   display:flex;
   flex-direction:column;
@@ -307,10 +331,12 @@ input{
   color:black;
 }
 
-/* RESULT */
+.hints ul{
+  text-align:left;
+}
+
 .win{
   color:#ff4fa3;
-  font-size:22px;
 }
 
 .fail{
