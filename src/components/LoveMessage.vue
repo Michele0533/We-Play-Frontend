@@ -7,9 +7,10 @@ import { ref, computed, watch } from 'vue'
 const showMessage = ref(false)
 const reveal = ref(false)
 
-/* FREEZE BACKGROUND */
+/* 🔒 FULL FREEZE FIX (wichtig für deine Sucheleiste) */
 watch(showMessage, (val) => {
   document.body.style.overflow = val ? 'hidden' : ''
+  document.documentElement.style.overflow = val ? 'hidden' : ''
 })
 
 /* =========================
@@ -39,7 +40,7 @@ const words = [
 ]
 
 /* =========================
-   CLUE MAP (UNCHANGED)
+   CLUE MAP (UNVERÄNDERT)
 ========================= */
 const clueMap = {
   GENSHIN: "Unser Lieblingsspiel 🎮",
@@ -65,7 +66,7 @@ const clueMap = {
 }
 
 /* =========================
-   GRID ENGINE
+   GRID ENGINE (unverändert)
 ========================= */
 const SIZE = 30
 
@@ -138,7 +139,7 @@ function generate(words) {
 const { grid: solution, placed } = generate(words)
 
 /* =========================
-   START MAP (NUMBERS + ARROWS)
+   START MAP
 ========================= */
 const startMap = {}
 let counter = 1
@@ -157,16 +158,13 @@ for (const p of placed) {
 }
 
 /* =========================
-   CLUES (SAFE + UNCHANGED MAP)
+   CLUES
 ========================= */
-const clues = placed.map((p, i) => {
-  const key = (p.word || "").toUpperCase()
-  return {
-    num: i + 1,
-    dir: p.dir === 'across' ? '→' : '↓',
-    text: clueMap[key] || clueMap[p.word] || p.word
-  }
-})
+const clues = placed.map((p, i) => ({
+  num: i + 1,
+  dir: p.dir === 'across' ? '→' : '↓',
+  text: clueMap[p.word] || p.word
+}))
 
 /* =========================
    USER GRID
@@ -178,27 +176,17 @@ const user = ref(
 )
 
 /* =========================
-   AUTO MOVE
+   NO AUTO SKIP (FIXED)
 ========================= */
 function moveNext(event, y, x) {
   const key = event.key
   if (!/^[a-zA-Z]$/.test(key)) return
 
   user.value[y][x] = key.toUpperCase()
-
-  for (let ny = y; ny < solution.length; ny++) {
-    for (let nx = (ny === y ? x + 1 : 0); nx < solution[ny].length; nx++) {
-      if (solution[ny][nx]) {
-        const el = document.querySelector(`[data-pos="${ny}-${nx}"]`)
-        if (el) el.focus()
-        return
-      }
-    }
-  }
 }
 
 /* =========================
-   CHECK WIN
+   CHECK
 ========================= */
 const solved = computed(() => {
   for (let y = 0; y < solution.length; y++) {
@@ -245,8 +233,12 @@ const solved = computed(() => {
         >
 
           <div v-if="startMap[`${y},${x}`]" class="meta">
-            <span class="num">{{ startMap[`${y},${x}`].num }}</span>
-            <span class="arrow">{{ startMap[`${y},${x}`].arrows.join('') }}</span>
+            <span class="num">
+              {{ startMap[`${y},${x}`].num }}
+            </span>
+            <span class="arrow">
+              {{ startMap[`${y},${x}`].arrows.join('') }}
+            </span>
           </div>
 
           <input
@@ -254,7 +246,6 @@ const solved = computed(() => {
             v-model="user[y][x]"
             maxlength="1"
             @keydown="moveNext($event, y, x)"
-            :data-pos="`${y}-${x}`"
           />
 
         </div>
@@ -285,6 +276,7 @@ const solved = computed(() => {
 </template>
 
 <style scoped>
+
 .love-button{
   position:fixed;
   bottom:20px;
@@ -306,6 +298,7 @@ const solved = computed(() => {
   display:flex;
   justify-content:center;
   align-items:center;
+  z-index:999999;
 }
 
 .popup{
@@ -342,6 +335,13 @@ input{
   border:none;
   text-align:center;
   font-weight:bold;
+}
+
+/* 🔥 FIX: Zahlen sichtbar */
+.num{
+  font-weight:bold;
+  color:white;
+  text-shadow:0 0 3px black;
 }
 
 .meta{
