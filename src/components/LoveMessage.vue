@@ -14,7 +14,7 @@ watch(showMessage, (val) => {
 })
 
 /* =========================
-   WORDS (UNVERÄNDERT)
+   WORDS
 ========================= */
 const words = [
   "GENSHIN",
@@ -40,7 +40,7 @@ const words = [
 ]
 
 /* =========================
-   CLUE MAP (UNVERÄNDERT)
+   CLUE MAP
 ========================= */
 const clueMap = {
   GENSHIN: "Unser Lieblingsspiel 🎮",
@@ -77,27 +77,23 @@ function emptyGrid() {
 }
 
 function canPlace(grid, word, x, y, dir) {
-  const w = (word || "").toUpperCase()
-
-  for (let i = 0; i < w.length; i++) {
+  for (let i = 0; i < word.length; i++) {
     const nx = x + (dir === 'across' ? i : 0)
     const ny = y + (dir === 'down' ? i : 0)
 
     if (!grid[ny] || nx < 0 || ny < 0 || nx >= SIZE || ny >= SIZE) return false
 
     const cell = grid[ny][nx]
-    if (cell && cell !== w[i]) return false
+    if (cell && cell !== word[i]) return false
   }
   return true
 }
 
 function place(grid, word, x, y, dir) {
-  const w = (word || "").toUpperCase()
-
-  for (let i = 0; i < w.length; i++) {
+  for (let i = 0; i < word.length; i++) {
     const nx = x + (dir === 'across' ? i : 0)
     const ny = y + (dir === 'down' ? i : 0)
-    grid[ny][nx] = w[i]
+    grid[ny][nx] = word[i]
   }
 }
 
@@ -108,17 +104,17 @@ function generate(words) {
   const sorted = [...words].sort((a, b) => b.length - a.length)
 
   place(grid, sorted[0], 10, 10, 'across')
-  placed.push({ word: sorted[0].toUpperCase(), x: 10, y: 10, dir: 'across' })
+  placed.push({ word: sorted[0], x: 10, y: 10, dir: 'across' })
 
   for (let w = 1; w < sorted.length; w++) {
-    const word = (sorted[w] || "").toUpperCase()
+    const word = sorted[w]
     let ok = false
 
     for (const p of placed) {
       for (let i = 0; i < p.word.length; i++) {
         for (let j = 0; j < word.length; j++) {
-
           if (p.word[i] === word[j]) {
+
             const x = p.x + (p.dir === 'across' ? i : 0) - j
             const y = p.y + (p.dir === 'down' ? i : 0) - j
             const dir = p.dir === 'across' ? 'down' : 'across'
@@ -188,7 +184,7 @@ function moveNext(event, y, x) {
 }
 
 /* =========================
-   SOLVED (FIXED)
+   CHECK
 ========================= */
 const solved = computed(() => {
   for (let y = 0; y < solution.length; y++) {
@@ -196,8 +192,8 @@ const solved = computed(() => {
       const correct = solution[y][x]
 
       if (correct) {
-        const input = (user.value[y][x] || "").toUpperCase()
-        const target = (correct || "").toUpperCase()
+        const input = user.value[y][x].toUpperCase()
+        const target = correct.toUpperCase()
 
         if (input !== target) return false
       }
@@ -206,23 +202,18 @@ const solved = computed(() => {
   return true
 })
 
-/* =========================
-   COLORS (FIXED)
-========================= */
 function isWrong(y, x) {
   if (!reveal.value) return false
   const correct = solution[y][x]
   if (!correct) return false
-
-  return (user.value[y][x] || "").toUpperCase() !== correct
+  return user.value[y][x].toUpperCase() !== correct.toUpperCase()
 }
 
 function isCorrect(y, x) {
   if (!reveal.value) return false
   const correct = solution[y][x]
   if (!correct) return false
-
-  return (user.value[y][x] || "").toUpperCase() === correct
+  return user.value[y][x].toUpperCase() === correct.toUpperCase()
 }
 </script>
 
@@ -259,10 +250,6 @@ function isCorrect(y, x) {
             v-model="user[y][x]"
             maxlength="1"
             @keydown="moveNext($event, y, x)"
-            :class="{
-              wrong: isWrong(y, x),
-              correct: isCorrect(y, x)
-            }"
           />
 
         </div>
@@ -293,7 +280,6 @@ function isCorrect(y, x) {
   padding:14px 18px;
   border-radius:30px;
   color:white;
-  font-size:20px;
 }
 
 .overlay{
@@ -316,7 +302,6 @@ function isCorrect(y, x) {
   width:30px;
   height:30px;
   border:1px solid #444;
-  background:white;
 }
 
 .cell.black{
@@ -328,27 +313,16 @@ input{
   height:100%;
   text-align:center;
   font-weight:bold;
-  border:none;
-}
-
-input.wrong{
-  background:red !important;
-  color:white;
-}
-
-input.correct{
-  background:green !important;
-  color:white;
 }
 
 .end{
-  margin-top:20px;
   color:#ff4fa3;
+  margin-top:20px;
   text-align:center;
 }
 
 .fail{
-  margin-top:20px;
   color:yellow;
+  margin-top:20px;
 }
 </style>
