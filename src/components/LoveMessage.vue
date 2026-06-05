@@ -3,29 +3,45 @@ import { ref, reactive, computed } from 'vue'
 
 const show = ref(false)
 
-// Lösung (8x8 Grid)
+// 🧠 Lösung (echtes Kreuzwort Raster mit Kreuzungen)
 const solution = [
-  ['G','E','N','S','H','I','N',null],
-  [null,null,null,null,null,null,null,null],
-  ['Z','E','L','D','A',null,null,null],
-  [null,null,null,null,null,null,null,null],
-  ['L','I','N','K',null,null,null,null],
-  [null,null,null,null,null,null,null,null],
-  ['S','I','L','A','S',null,null,null],
-  ['D','O','K','O','M','I',null,null],
+  ['G','E','N','S','H','I','N',null,null,null],
+  [null,null,null,null,null,null,'I',null,null,null],
+  ['Z','E','L','D','A',null,'F',null,null,null],
+  [null,null,null,null,null,null,'E',null,null,null],
+  ['L','I','N','K',null,null,null,null,null,null],
+  [null,null,null,null,null,null,null,null,null,null],
+  ['S','I','L','A','S',null,null,null,null,null],
+  ['D','O','K','O','M','I',null,null,null,null],
+  [null,null,null,null,null,null,null,null,null,null],
 ]
 
-// User input
+// 🟡 markierte Felder fürs Lösungswort "WIFE"
+const solutionWordCells = [
+  [0,6],
+  [1,6],
+  [2,6],
+  [3,6],
+]
+
+// 🧾 User input
 const user = reactive(
-  Array.from({ length: 8 }, () =>
-    Array.from({ length: 8 }, () => '')
+  Array.from({ length: 9 }, () =>
+    Array.from({ length: 10 }, () => '')
   )
 )
 
-// Check
+// ❌ Fehler-Check pro Feld
+const isWrong = (y, x) => {
+  if (!solution[y][x]) return false
+  const val = user[y][x].toUpperCase()
+  return val && val !== solution[y][x]
+}
+
+// ✅ Check gesamtes Rätsel
 const solved = computed(() => {
-  for (let y = 0; y < 8; y++) {
-    for (let x = 0; x < 8; x++) {
+  for (let y = 0; y < solution.length; y++) {
+    for (let x = 0; x < solution[y].length; x++) {
       if (solution[y][x]) {
         if (user[y][x].toUpperCase() !== solution[y][x]) {
           return false
@@ -35,6 +51,13 @@ const solved = computed(() => {
   }
   return true
 })
+
+// 💖 Lösungswort
+const checkWord = () => {
+  return solutionWordCells
+    .map(([y, x]) => user[y][x].toUpperCase())
+    .join('') === 'WIFE'
+}
 </script>
 
 <template>
@@ -49,16 +72,16 @@ const solved = computed(() => {
   <div class="popup">
 
     <h2>🧩 Kreuzworträtsel</h2>
-    <p>Löse die Hinweise ❤️</p>
+    <p>Wie im Rätselheft lösen ❤️</p>
 
-    <!-- HINTS -->
+    <!-- HINTS wie im Heft -->
     <div class="hints">
-      <p>1. Unser Lieblingsspiel 🎮</p>
-      <p>2. Spielreihe mit Zelda</p>
-      <p>3. Held aus Hyrule</p>
-      <p>4. Name des kleinen Rackers 🐶</p>
-      <p>5. Anime Convention in Düsseldorf</p>
-      <p>6. Englisches Wort für Ehefrau (verborgen im Rätsel)</p>
+      <p>1 → Unser Lieblingsspiel 🎮</p>
+      <p>2 → Spielreihe mit Zelda</p>
+      <p>3 → Held aus Hyrule</p>
+      <p>4 → Name des kleinen Rackers 🐶</p>
+      <p>5 → Anime Convention</p>
+      <p>↓ Vertikal versteckt: WIFE 💖</p>
     </div>
 
     <!-- GRID -->
@@ -70,6 +93,7 @@ const solved = computed(() => {
             v-if="cell"
             v-model="user[y][x]"
             maxlength="1"
+            :class="{ wrong: isWrong(y,x) }"
           />
 
           <div v-else class="black"></div>
@@ -78,10 +102,20 @@ const solved = computed(() => {
       </div>
     </div>
 
+    <!-- CHECK BUTTON -->
+    <button class="check" @click="showResult = true">
+      Prüfen ❤️
+    </button>
+
     <!-- RESULT -->
-    <div v-if="solved" class="win">
-      💖 Richtig gelöst!
+    <div v-if="show && solved" class="win">
+      💖 Perfekt gelöst!
       <h1>MY WIFE ❤️</h1>
+      <div class="heart">💞💞💞</div>
+    </div>
+
+    <div v-if="show && !solved && showResult" class="fail">
+      😏 Noch nicht ganz richtig!
     </div>
 
     <button class="close" @click="show = false">
@@ -98,13 +132,12 @@ const solved = computed(() => {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  padding: 14px 18px;
+  background: #ff5c8a;
   border: none;
   border-radius: 30px;
-  background: #ff5c8a;
-  color: white;
+  padding: 14px 16px;
   font-size: 28px;
-  cursor: pointer;
+  color: white;
 }
 
 .overlay {
@@ -121,12 +154,12 @@ const solved = computed(() => {
   padding: 20px;
   border-radius: 20px;
   text-align: center;
-  max-width: 500px;
+  max-width: 520px;
 }
 
 .hints {
   text-align: left;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 
 .grid {
@@ -151,18 +184,48 @@ input {
   font-weight: bold;
 }
 
+.wrong {
+  background: #ffb3b3;
+}
+
 .black {
   width: 100%;
   height: 100%;
   background: black;
 }
 
+.check {
+  margin-top: 10px;
+  padding: 8px 12px;
+}
+
 .win {
-  margin-top: 15px;
+  margin-top: 10px;
   color: hotpink;
+  animation: pop 0.5s ease;
+}
+
+.heart {
+  font-size: 30px;
+  animation: float 1s infinite alternate;
+}
+
+.fail {
+  color: yellow;
+  margin-top: 10px;
 }
 
 .close {
-  margin-top: 15px;
+  margin-top: 10px;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.8); }
+  100% { transform: scale(1); }
+}
+
+@keyframes float {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-5px); }
 }
 </style>
