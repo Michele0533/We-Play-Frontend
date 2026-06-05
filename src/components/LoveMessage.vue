@@ -7,7 +7,7 @@ import { ref, computed, watch } from 'vue'
 const showMessage = ref(false)
 const reveal = ref(false)
 
-/* 🔒 FULL FREEZE FIX (wichtig für deine Sucheleiste) */
+/* FREEZE BACKGROUND */
 watch(showMessage, (val) => {
   document.body.style.overflow = val ? 'hidden' : ''
   document.documentElement.style.overflow = val ? 'hidden' : ''
@@ -40,7 +40,7 @@ const words = [
 ]
 
 /* =========================
-   CLUE MAP (UNVERÄNDERT)
+   CLUE MAP (UNCHANGED)
 ========================= */
 const clueMap = {
   GENSHIN: "Unser Lieblingsspiel 🎮",
@@ -66,7 +66,7 @@ const clueMap = {
 }
 
 /* =========================
-   GRID ENGINE (unverändert)
+   GRID ENGINE
 ========================= */
 const SIZE = 30
 
@@ -139,9 +139,10 @@ function generate(words) {
 const { grid: solution, placed } = generate(words)
 
 /* =========================
-   START MAP
+   START MAP (NUMBERS + ARROWS)
 ========================= */
 const startMap = {}
+const startLetters = {}
 let counter = 1
 
 for (const p of placed) {
@@ -152,6 +153,7 @@ for (const p of placed) {
       num: counter++,
       arrows: []
     }
+    startLetters[key] = p.word[0] // ⭐ STARTBUCHSTABE
   }
 
   startMap[key].arrows.push(p.dir === 'across' ? '→' : '↓')
@@ -163,7 +165,7 @@ for (const p of placed) {
 const clues = placed.map((p, i) => ({
   num: i + 1,
   dir: p.dir === 'across' ? '→' : '↓',
-  text: clueMap[p.word] || p.word
+  text: clueMap[p.word] || clueMap[p.word.toUpperCase()] || p.word
 }))
 
 /* =========================
@@ -176,12 +178,11 @@ const user = ref(
 )
 
 /* =========================
-   NO AUTO SKIP (FIXED)
+   INPUT (NO AUTO SKIP)
 ========================= */
 function moveNext(event, y, x) {
   const key = event.key
   if (!/^[a-zA-Z]$/.test(key)) return
-
   user.value[y][x] = key.toUpperCase()
 }
 
@@ -246,6 +247,7 @@ const solved = computed(() => {
             v-model="user[y][x]"
             maxlength="1"
             @keydown="moveNext($event, y, x)"
+            :placeholder="startLetters[`${y},${x}`] || ''"
           />
 
         </div>
@@ -276,7 +278,6 @@ const solved = computed(() => {
 </template>
 
 <style scoped>
-
 .love-button{
   position:fixed;
   bottom:20px;
@@ -337,7 +338,6 @@ input{
   font-weight:bold;
 }
 
-/* 🔥 FIX: Zahlen sichtbar */
 .num{
   font-weight:bold;
   color:white;
