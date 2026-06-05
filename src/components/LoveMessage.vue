@@ -1,11 +1,16 @@
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 /* =========================
-   POPUP STATE (ORIGINAL)
+   POPUP STATE
 ========================= */
 const showMessage = ref(false)
 const reveal = ref(false)
+
+/* FREEZE BACKGROUND */
+watch(showMessage, (val) => {
+  document.body.style.overflow = val ? 'hidden' : ''
+})
 
 /* =========================
    WORDS
@@ -29,12 +34,12 @@ const words = [
   "SILAS",
   "DOKOMI",
   "ANKETTEN",
-   "Wolf",
-   "Stöhnen"
+  "Wolf",
+  "Stöhnen"
 ]
 
 /* =========================
-   CLUES (DEINE HINTS)
+   CLUE MAP (UNCHANGED)
 ========================= */
 const clueMap = {
   GENSHIN: "Unser Lieblingsspiel 🎮",
@@ -55,8 +60,8 @@ const clueMap = {
   SILAS: "kleiner Racker 🐶",
   DOKOMI: "Anime Convention 🇯🇵",
   ANKETTEN: "unser insider",
-   Wolf: "dein lieblingstier",
-   Stöhnen: "Dein tolles atmen, wenn ich an dir rumspiele"
+  Wolf: "dein lieblingstier",
+  Stöhnen: "Dein tolles atmen, wenn ich an dir rumspiele"
 }
 
 /* =========================
@@ -91,9 +96,6 @@ function place(grid, word, x, y, dir) {
   }
 }
 
-/* =========================
-   GENERATE (retry safe)
-========================= */
 function generate(words) {
   const grid = emptyGrid()
   const placed = []
@@ -136,7 +138,7 @@ function generate(words) {
 const { grid: solution, placed } = generate(words)
 
 /* =========================
-   NUMBERS + ARROWS
+   START MAP (NUMBERS + ARROWS)
 ========================= */
 const startMap = {}
 let counter = 1
@@ -155,13 +157,14 @@ for (const p of placed) {
 }
 
 /* =========================
-   CLUES
+   CLUES (SAFE + UNCHANGED MAP)
 ========================= */
 const clues = placed.map((p, i) => {
+  const key = (p.word || "").toUpperCase()
   return {
     num: i + 1,
     dir: p.dir === 'across' ? '→' : '↓',
-    text: clueMap[p.word] || p.word
+    text: clueMap[key] || clueMap[p.word] || p.word
   }
 })
 
@@ -175,7 +178,27 @@ const user = ref(
 )
 
 /* =========================
-   CHECK
+   AUTO MOVE
+========================= */
+function moveNext(event, y, x) {
+  const key = event.key
+  if (!/^[a-zA-Z]$/.test(key)) return
+
+  user.value[y][x] = key.toUpperCase()
+
+  for (let ny = y; ny < solution.length; ny++) {
+    for (let nx = (ny === y ? x + 1 : 0); nx < solution[ny].length; nx++) {
+      if (solution[ny][nx]) {
+        const el = document.querySelector(`[data-pos="${ny}-${nx}"]`)
+        if (el) el.focus()
+        return
+      }
+    }
+  }
+}
+
+/* =========================
+   CHECK WIN
 ========================= */
 const solved = computed(() => {
   for (let y = 0; y < solution.length; y++) {
@@ -193,18 +216,15 @@ const solved = computed(() => {
 
 <template>
 
-<!-- BUTTON -->
 <button class="love-button" @click="showMessage = true">
   ❤️ Nachricht
 </button>
 
-<!-- POPUP -->
 <div v-if="showMessage" class="overlay">
   <div class="popup">
 
     <h2>🧩 Kreuzworträtsel</h2>
 
-    <!-- CLUES -->
     <div class="hints">
       <h3>Hinweise</h3>
       <ul>
@@ -214,7 +234,6 @@ const solved = computed(() => {
       </ul>
     </div>
 
-    <!-- GRID -->
     <div class="grid">
       <div v-for="(row,y) in solution" :key="y" class="row">
 
@@ -226,18 +245,16 @@ const solved = computed(() => {
         >
 
           <div v-if="startMap[`${y},${x}`]" class="meta">
-            <span class="num">
-              {{ startMap[`${y},${x}`].num }}
-            </span>
-            <span class="arrow">
-              {{ startMap[`${y},${x}`].arrows.join('') }}
-            </span>
+            <span class="num">{{ startMap[`${y},${x}`].num }}</span>
+            <span class="arrow">{{ startMap[`${y},${x}`].arrows.join('') }}</span>
           </div>
 
           <input
             v-if="cell"
             v-model="user[y][x]"
             maxlength="1"
+            @keydown="moveNext($event, y, x)"
+            :data-pos="`${y}-${x}`"
           />
 
         </div>
@@ -245,21 +262,19 @@ const solved = computed(() => {
       </div>
     </div>
 
-    <!-- CHECK -->
     <button class="check" @click="reveal = true">
       Prüfen ❤️
     </button>
 
     <div v-if="reveal">
-      <div v-if="solved" class="win">
-        💖 MY WIFE ❤️
+      <div v-if="solved" class="end">
+        💖 I LOVE YOU 💖
       </div>
       <div v-else class="fail">
         😏 Noch nicht alles richtig
       </div>
     </div>
 
-    <!-- CLOSE -->
     <button @click="showMessage = false">
       Schließen
     </button>
@@ -270,7 +285,6 @@ const solved = computed(() => {
 </template>
 
 <style scoped>
-
 .love-button{
   position:fixed;
   bottom:20px;
@@ -287,14 +301,15 @@ const solved = computed(() => {
 .overlay{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,0.7);
+  background:rgba(0,0,0,0.6);
+  backdrop-filter: blur(6px);
   display:flex;
   justify-content:center;
   align-items:center;
 }
 
 .popup{
-  background:#222;
+  background:#1f1f1f;
   color:white;
   padding:20px;
   border-radius:16px;
@@ -309,9 +324,7 @@ const solved = computed(() => {
   align-items:center;
 }
 
-.row{
-  display:flex;
-}
+.row{ display:flex; }
 
 .cell{
   width:30px;
@@ -321,9 +334,7 @@ const solved = computed(() => {
   background:white;
 }
 
-.cell.black{
-  background:black;
-}
+.cell.black{ background:black; }
 
 input{
   width:100%;
@@ -343,20 +354,15 @@ input{
   color:black;
 }
 
-.num{
-  font-weight:bold;
-}
-
-.arrow{
-  opacity:0.8;
-}
-
-.win{
-  color:#ff4fa3;
+.end{
+  margin-top:20px;
   font-size:22px;
+  color:#ff4fa3;
+  text-align:center;
 }
 
 .fail{
+  margin-top:20px;
   color:yellow;
 }
 </style>
