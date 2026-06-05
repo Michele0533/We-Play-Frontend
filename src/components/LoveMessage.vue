@@ -39,23 +39,23 @@ const clueMap = {
   GENSHIN: "Unser Lieblingsspiel 🎮",
   ANIME: "Seriengenre aus Japan 🍜",
   LIEBE: "Starkes Gefühl zwischen dir und mir❤️",
-  BETTSPORT: "😏 im Bett mit dir honey",
+  BETTSPORT: " im Bett mit dir, honey",
   COMPUTERSPIELE: "Was wir jeden Tag machen",
   SUPERMARKT: "Pingolf",
   OBSESSED: "das was ich mit dir bin",
   FAMILIE: "Du, ich und eine Mini von dir",
   HERZSCHLAG: "Puls im Körper 💓",
-  ORGASMUS: "Höhepunkt 😳",
-  SPIELZEUG: "Dinge die man ins Bett nimmt",
+  ORGASMUS: "Der Höhepunkt",
+  SPIELZEUG: "Dinge die man ins Bett nimmt zum spaß haben ^^",
   WIFE: "du ❤️",
-  HUSBAND: "ich 😏",
-  ZELDA: "Dein Lieblingsspiel",
+  HUSBAND: "ich ",
+  ZELDA: "Dein Lieblingsspiel und prinzessin",
   LINK: "Held aus Zelda 🗡️",
-  SILAS: "kleiner Racker 🐶",
-  DOKOMI: "Anime Convention 🇯🇵",
+  SILAS: "kleiner Racker und bruder",
+  DOKOMI: "Anime Convention (erstes treffen)",
   ANKETTEN: "unser Insider",
   WOLF: "dein Lieblingstier",
-  STÖHNEN: "dein süßes Atmen 😏"
+  STÖHNEN: "dein tolles atmen, wenn ich da bin und mit dir spiele :)"
 }
 
 /* ========================= NORMALIZE ========================= */
