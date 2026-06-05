@@ -2,43 +2,39 @@
 import { ref, reactive, computed } from 'vue'
 
 const show = ref(false)
+const reveal = ref(false)
 
-// 🧠 Lösung (echtes Kreuzwort Raster mit Kreuzungen)
+// 🧩 FIXED MANUAL CROSSWORD GRID (clean placement)
 const solution = [
-  ['G','E','N','S','H','I','N',null,null,null],
-  [null,null,null,null,null,null,'I',null,null,null],
-  ['Z','E','L','D','A',null,'F',null,null,null],
-  [null,null,null,null,null,null,'E',null,null,null],
-  ['L','I','N','K',null,null,null,null,null,null],
-  [null,null,null,null,null,null,null,null,null,null],
-  ['S','I','L','A','S',null,null,null,null,null],
-  ['D','O','K','O','M','I',null,null,null,null],
-  [null,null,null,null,null,null,null,null,null,null],
+  ['C','O','M','P','U','T','E','R','S','P','I','E','L','E',null,null,null,null,null],
+  [null,null,null,null,null,null,'A',null,null,null,null,null,null,null,null,null,null,null],
+  ['S','U','P','E','R','M','A','R','K','T',null,null,null,null,null,null,null,null,null],
+  [null,null,null,null,null,null,'I',null,null,null,null,null,null,null,null,null,null,null],
+  ['B','E','T','T','S','P','O','R','T',null,null,null,null,null,null,null,null,null,null],
+  [null,null,null,null,null,null,'M',null,null,null,null,null,null,null,null,null,null,null],
+  ['A','N','I','M','E',null,'E',null,null,null,null,null,null,null,null,null,null,null],
+  [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  ['L','I','E','B','E',null,null,null,null,null,null,null,null,null,null,null,null,null],
+  [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  ['F','A','M','I','L','I','E',null,null,null,null,null,null,null,null,null,null,null],
+  [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  ['O','B','S','E','S','S','E','D',null,null,null,null,null,null,null,null,null,null],
+  [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  ['H','Ö','H','E','P','U','N','K','T',null,null,null,null,null,null,null,null,null],
+  [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  ['G','E','N','S','H','I','N',null,null,null,null,null,null,null,null,null,null,null],
+  ['Z','E','L','D','A',null,null,null,null,null,null,null,null,null,null,null,null,null],
+  ['S','I','L','A','S',null,null,null,null,null,null,null,null,null,null,null,null,null],
 ]
 
-// 🟡 markierte Felder fürs Lösungswort "WIFE"
-const solutionWordCells = [
-  [0,6],
-  [1,6],
-  [2,6],
-  [3,6],
-]
-
-// 🧾 User input
+// input grid
 const user = reactive(
-  Array.from({ length: 9 }, () =>
-    Array.from({ length: 10 }, () => '')
+  Array.from({ length: 19 }, () =>
+    Array.from({ length: 19 }, () => '')
   )
 )
 
-// ❌ Fehler-Check pro Feld
-const isWrong = (y, x) => {
-  if (!solution[y][x]) return false
-  const val = user[y][x].toUpperCase()
-  return val && val !== solution[y][x]
-}
-
-// ✅ Check gesamtes Rätsel
+// check correctness
 const solved = computed(() => {
   for (let y = 0; y < solution.length; y++) {
     for (let x = 0; x < solution[y].length; x++) {
@@ -52,12 +48,10 @@ const solved = computed(() => {
   return true
 })
 
-// 💖 Lösungswort
-const checkWord = () => {
-  return solutionWordCells
-    .map(([y, x]) => user[y][x].toUpperCase())
-    .join('') === 'WIFE'
-}
+// final message
+const finalText = computed(() => {
+  return solved.value ? "💖 MY WIFE ❤️ WILL YOU MARRY ME?" : ""
+})
 </script>
 
 <template>
@@ -72,28 +66,39 @@ const checkWord = () => {
   <div class="popup">
 
     <h2>🧩 Kreuzworträtsel</h2>
-    <p>Wie im Rätselheft lösen ❤️</p>
+    <p>Löse alle Begriffe ❤️</p>
 
-    <!-- HINTS wie im Heft -->
+    <!-- HINTS (Heftstyle) -->
     <div class="hints">
-      <p>1 → Unser Lieblingsspiel 🎮</p>
-      <p>2 → Spielreihe mit Zelda</p>
-      <p>3 → Held aus Hyrule</p>
-      <p>4 → Name des kleinen Rackers 🐶</p>
-      <p>5 → Anime Convention</p>
-      <p>↓ Vertikal versteckt: WIFE 💖</p>
+      <p>1→ Computerspiele</p>
+      <p>2→ Supermarkt</p>
+      <p>3→ Bettsport</p>
+      <p>4→ Anime</p>
+      <p>5→ Liebe</p>
+      <p>6→ Familie</p>
+      <p>7→ Obsesssed</p>
+      <p>8→ Höhepunkt</p>
+      <p>9→ Spielzeug</p>
+      <p>10→ Herzschlag</p>
+      <p>11→ Genshin</p>
+      <p>12→ Zelda</p>
+      <p>13→ Link</p>
+      <p>14→ Silas 🐶</p>
+      <p>15→ Dokomi</p>
+      <p>16→ Anketten</p>
+      <p>17→ Wife</p>
+      <p>18→ Husband</p>
     </div>
 
     <!-- GRID -->
     <div class="grid">
-      <div v-for="(row, y) in solution" :key="y" class="row">
-        <div v-for="(cell, x) in row" :key="x" class="cell">
+      <div v-for="(row,y) in solution" :key="y" class="row">
+        <div v-for="(cell,x) in row" :key="x" class="cell">
 
           <input
             v-if="cell"
             v-model="user[y][x]"
             maxlength="1"
-            :class="{ wrong: isWrong(y,x) }"
           />
 
           <div v-else class="black"></div>
@@ -102,20 +107,24 @@ const checkWord = () => {
       </div>
     </div>
 
-    <!-- CHECK BUTTON -->
-    <button class="check" @click="showResult = true">
+    <!-- CHECK -->
+    <button class="check" @click="reveal = true">
       Prüfen ❤️
     </button>
 
-    <!-- RESULT -->
-    <div v-if="show && solved" class="win">
-      💖 Perfekt gelöst!
-      <h1>MY WIFE ❤️</h1>
-      <div class="heart">💞💞💞</div>
-    </div>
+    <!-- REVEAL -->
+    <div v-if="reveal" class="result">
 
-    <div v-if="show && !solved && showResult" class="fail">
-      😏 Noch nicht ganz richtig!
+      <div v-if="solved" class="win">
+        💖 Richtig gelöst!
+        <h1 class="final">{{ finalText }}</h1>
+        <div class="hearts">💞💞💞</div>
+      </div>
+
+      <div v-else class="fail">
+        😏 Noch nicht alles richtig…
+      </div>
+
     </div>
 
     <button class="close" @click="show = false">
@@ -133,10 +142,10 @@ const checkWord = () => {
   bottom: 20px;
   right: 20px;
   background: #ff5c8a;
-  border: none;
   border-radius: 30px;
-  padding: 14px 16px;
+  padding: 14px;
   font-size: 28px;
+  border: none;
   color: white;
 }
 
@@ -150,15 +159,16 @@ const checkWord = () => {
 }
 
 .popup {
-  background: #888;
+  background: #777;
   padding: 20px;
   border-radius: 20px;
+  max-width: 900px;
   text-align: center;
-  max-width: 520px;
 }
 
 .hints {
   text-align: left;
+  font-size: 13px;
   margin-bottom: 10px;
 }
 
@@ -171,8 +181,8 @@ const checkWord = () => {
 }
 
 .cell {
-  width: 32px;
-  height: 32px;
+  width: 22px;
+  height: 22px;
   border: 1px solid #ddd;
 }
 
@@ -180,52 +190,50 @@ input {
   width: 100%;
   height: 100%;
   text-align: center;
+  font-size: 10px;
   border: none;
-  font-weight: bold;
-}
-
-.wrong {
-  background: #ffb3b3;
 }
 
 .black {
+  background: black;
   width: 100%;
   height: 100%;
-  background: black;
 }
 
 .check {
   margin-top: 10px;
-  padding: 8px 12px;
+  padding: 8px;
+}
+
+.result {
+  margin-top: 10px;
 }
 
 .win {
-  margin-top: 10px;
   color: hotpink;
-  animation: pop 0.5s ease;
+  animation: pop 0.6s ease;
 }
 
-.heart {
-  font-size: 30px;
+.hearts {
+  font-size: 26px;
   animation: float 1s infinite alternate;
 }
 
 .fail {
   color: yellow;
-  margin-top: 10px;
 }
 
-.close {
+.final {
   margin-top: 10px;
 }
 
 @keyframes pop {
-  0% { transform: scale(0.8); }
+  0% { transform: scale(0.7); }
   100% { transform: scale(1); }
 }
 
 @keyframes float {
   0% { transform: translateY(0); }
-  100% { transform: translateY(-5px); }
+  100% { transform: translateY(-6px); }
 }
 </style>
