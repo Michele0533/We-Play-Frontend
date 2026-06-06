@@ -37,7 +37,7 @@ function redeem() {
       <!-- BODY -->
       <div class="card-body">
         <div class="big">
-          {{ redeemed ? "✔ EINGELÖST 💖" : "1x Wunschzeit mit mir" }}
+          {{ redeemed ? "✔ EINGELÖST 💖" : "1x Wunsch frei für alles was du willst" }}
         </div>
 
         <div class="small">
