@@ -1,100 +1,175 @@
 <script setup>
 import { ref, watch } from 'vue'
 
+/* =========================
+   POPUP STATE
+========================= */
 const showMessage = ref(false)
+const redeemed = ref(false)
 
 /* FREEZE BACKGROUND */
 watch(showMessage, (val) => {
   document.body.style.overflow = val ? 'hidden' : ''
   document.documentElement.style.overflow = val ? 'hidden' : ''
 })
+
+function redeem() {
+  redeemed.value = true
+}
 </script>
 
 <template>
-<button class="love-button" @click="showMessage = true">
-  ❤️ Gutschein öffnen
-</button>
+  <!-- BUTTON -->
+  <button class="love-button" @click="showMessage = true">
+    💳 Gutschein öffnen
+  </button>
 
-<div v-if="showMessage" class="overlay">
-  <div class="popup">
+  <!-- OVERLAY -->
+  <div v-if="showMessage" class="overlay">
+    <div class="card">
 
-    <h2>🎁 Dein Gutschein</h2>
+      <!-- HEADER -->
+      <div class="card-header">
+        <div class="title">GUTSCHEIN</div>
+        <div class="subtitle">nur für dich ❤️</div>
+      </div>
 
-    <div class="voucher">
-      <h3>💖 Ein Gutschein für dich 💖</h3>
+      <!-- BODY -->
+      <div class="card-body">
+        <div class="big">
+          {{ redeemed ? "✔ EINGELÖST 💖" : "1x Wunschzeit mit mir" }}
+        </div>
 
-      <p>
-        Dieser Gutschein berechtigt dich zu:
-      </p>
+        <div class="small">
+          gültig: für immer • personalisiert
+        </div>
+      </div>
 
-      <ul>
-        <li>💆‍♀️ 1x Verwöhnabend ohne Stress</li>
-        <li>🍫 Süßigkeiten deiner Wahl</li>
-        <li>🎮 Gemeinsame Gaming-Session</li>
-        <li>💋 100% Aufmerksamkeit von mir</li>
-        <li>🛏️ Wunschabend nur für dich</li>
-      </ul>
+      <!-- FOOTER -->
+      <div class="card-footer">
 
-      <p class="love">
-        Gültig: für immer ❤️
-      </p>
+        <button
+          v-if="!redeemed"
+          class="redeem"
+          @click="redeem"
+        >
+          Einlösen 🎁
+        </button>
+
+        <div v-else class="used">
+          Schon eingelöst 💖
+        </div>
+
+        <button class="close" @click="showMessage = false">
+          Schließen
+        </button>
+
+      </div>
+
     </div>
-
-    <button @click="showMessage = false">Schließen</button>
-
   </div>
-</div>
 </template>
 
 <style scoped>
+/* BUTTON */
 .love-button{
   position:fixed;
   bottom:20px;
   right:20px;
-  background:#ff5c8a;
+  background:#ff4fa3;
   border:none;
   padding:14px 18px;
   border-radius:30px;
   color:white;
+  font-weight:bold;
+  cursor:pointer;
 }
 
+/* OVERLAY */
 .overlay{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,0.6);
+  background:rgba(0,0,0,0.65);
   display:flex;
   justify-content:center;
   align-items:center;
 }
 
-.popup{
-  background:#1f1f1f;
-  color:white;
-  padding:20px;
-  border-radius:16px;
-  width:320px;
-  text-align:center;
-}
-
-.voucher{
+/* CARD */
+.card{
+  width:340px;
+  border-radius:22px;
   background:linear-gradient(135deg,#ff4fa3,#ff8cc6);
-  padding:16px;
-  border-radius:12px;
-  margin-top:10px;
   color:white;
+  padding:22px;
+  box-shadow:0 12px 35px rgba(0,0,0,0.45);
+  font-family: Arial, sans-serif;
 }
 
-.voucher ul{
-  text-align:left;
-  padding-left:18px;
+/* HEADER */
+.card-header{
+  text-align:center;
+  letter-spacing:2px;
 }
 
-.love{
-  margin-top:10px;
+.title{
+  font-size:22px;
   font-weight:bold;
 }
 
-button{
-  margin-top:15px;
+.subtitle{
+  font-size:14px;
+  opacity:0.9;
+  margin-top:4px;
+}
+
+/* BODY */
+.card-body{
+  margin-top:22px;
+  text-align:center;
+}
+
+.big{
+  font-size:18px;
+  font-weight:bold;
+}
+
+.small{
+  font-size:12px;
+  opacity:0.8;
+  margin-top:6px;
+}
+
+/* FOOTER */
+.card-footer{
+  margin-top:22px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+/* BUTTONS */
+.redeem{
+  background:white;
+  color:#ff4fa3;
+  border:none;
+  padding:10px;
+  border-radius:12px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.close{
+  background:rgba(255,255,255,0.25);
+  border:none;
+  padding:8px;
+  border-radius:10px;
+  color:white;
+  cursor:pointer;
+}
+
+.used{
+  text-align:center;
+  font-weight:bold;
 }
 </style>
