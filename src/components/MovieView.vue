@@ -30,11 +30,12 @@ const searchMovies = async () => {
 }
 
 
-// 📥 LOAD + SORT
+// 📥 LOAD
 const loadMovies = async () => {
   const res = await fetch(`${API}/api/movies`)
   const data = await res.json()
 
+  // sort stable
   data.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
 
   watchlist.value = []
@@ -72,47 +73,33 @@ const addMovie = async (movie) => {
 }
 
 
-// 🔁 LIVE UPDATE STATUS (FIX)
+// 🔁 STATUS CHANGE (ROBUST FIX)
 const updateStatus = async (movie, status) => {
 
-  // 1. sofort aus allen Listen entfernen (LIVE UI FIX)
-  watchlist.value = watchlist.value.filter(m => m.id !== movie.id)
-  watched.value = watched.value.filter(m => m.id !== movie.id)
-  rewatch.value = rewatch.value.filter(m => m.id !== movie.id)
+  console.log("MOVE:", movie.id, "->", status)
 
-  // 2. Ziel-Liste bestimmen
-  let targetList =
-    status === 'watched'
-      ? watched.value
-      : status === 'rewatch'
-        ? rewatch.value
-        : watchlist.value
-
-  const newOrder = targetList.length
-
-  const updatedMovie = {
-    ...movie,
-    status,
-    order: newOrder
-  }
-
-  // 3. sofort UI aktualisieren
-  targetList.push(updatedMovie)
-
-  // 4. Backend speichern
-  await fetch(`${API}/api/movies/${movie.id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      status,
-      order: newOrder
+  try {
+    const res = await fetch(`${API}/api/movies/${movie.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
     })
-  })
+
+    if (!res.ok) {
+      console.error("PATCH failed")
+      return
+    }
+
+    await loadMovies()
+  } catch (err) {
+    console.error("ERROR:", err)
+  }
 }
 
 
 // ❌ DELETE
 const deleteMovie = async (id) => {
+
   watchlist.value = watchlist.value.filter(m => m.id !== id)
   watched.value = watched.value.filter(m => m.id !== id)
   rewatch.value = rewatch.value.filter(m => m.id !== id)
@@ -123,7 +110,7 @@ const deleteMovie = async (id) => {
 }
 
 
-// 🔍 RESET SEARCH
+// 🔍 RESET
 const resetSearch = () => {
   search.value = ''
   movies.value = []
