@@ -5,11 +5,7 @@ const API = "https://we-play-backend.onrender.com"
 
 const search = ref('')
 const movies = ref([])
-
 const myMovies = ref([])
-const watchedMovies = ref([])
-const rewatchMovies = ref([])
-
 const showDropdown = ref(false)
 
 
@@ -30,7 +26,7 @@ const searchMovies = async () => {
 }
 
 
-// 📥 Laden
+// 📥 laden
 const loadMovies = async () => {
   const res = await fetch(`${API}/api/movies`)
   myMovies.value = await res.json()
@@ -57,41 +53,29 @@ const addMovie = async (movie) => {
 }
 
 
-// ❌ löschen (auch lokal entfernen)
+// ❌ löschen
 const deleteMovie = async (id) => {
-  await fetch(`${API}/api/movies/${id}`, { method: 'DELETE' })
+  await fetch(`${API}/api/movies/${id}`, {
+    method: 'DELETE'
+  })
 
   myMovies.value = myMovies.value.filter(m => m.id !== id)
-  watchedMovies.value = watchedMovies.value.filter(m => m.id !== id)
-  rewatchMovies.value = rewatchMovies.value.filter(m => m.id !== id)
 }
 
 
-// 📦 Status ändern
-const setStatus = (movie, status) => {
-  removeFromAll(movie)
+// 🔁 STATUS UPDATE (Backend)
+const updateStatus = async (movie, status) => {
+  await fetch(`${API}/api/movies/${movie.id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status })
+  })
 
-  if (status === 'watchlist') myMovies.value.push(movie)
-  if (status === 'watched') watchedMovies.value.push(movie)
-  if (status === 'rewatch') rewatchMovies.value.push(movie)
+  movie.status = status
 }
 
 
-// 🧹 aus allen Listen entfernen
-const removeFromAll = (movie) => {
-  myMovies.value = myMovies.value.filter(m => m.id !== movie.id)
-  watchedMovies.value = watchedMovies.value.filter(m => m.id !== movie.id)
-  rewatchMovies.value = rewatchMovies.value.filter(m => m.id !== movie.id)
-}
-
-
-// 🔁 Status-Wechsel Helfer
-const toWatched = (movie) => setStatus(movie, 'watched')
-const toRewatch = (movie) => setStatus(movie, 'rewatch')
-const backToList = (movie) => setStatus(movie, 'watchlist')
-
-
-// 🔍 Reset Search
+// 🔍 reset search
 const resetSearch = () => {
   search.value = ''
   movies.value = []
@@ -99,17 +83,7 @@ const resetSearch = () => {
 }
 
 
-// 📥 initial laden + sortieren
-onMounted(async () => {
-  const res = await fetch(`${API}/api/movies`)
-  const data = await res.json()
-
-  data.forEach(m => {
-    if (!m.status || m.status === 'watchlist') myMovies.value.push(m)
-    else if (m.status === 'watched') watchedMovies.value.push(m)
-    else if (m.status === 'rewatch') rewatchMovies.value.push(m)
-  })
-})
+onMounted(loadMovies)
 </script>
 
 <template>
@@ -140,58 +114,40 @@ onMounted(async () => {
     </div>
   </div>
 
-
-  <!-- WATCHLIST -->
+  <!-- LIST -->
   <h2>📋 Meine Liste</h2>
 
   <div class="games">
     <div v-for="m in myMovies" :key="m.id" class="card">
+
       <img v-if="m.image" :src="m.image" />
       <h3>{{ m.name }}</h3>
 
-      <div class="buttons">
-        <button class="watched" @click="toWatched(m)">✅ Gesehen</button>
-        <button class="rewatch" @click="toRewatch(m)">🔄 Rewatch</button>
-        <button class="delete" @click="deleteMovie(m.id)">❌</button>
-      </div>
-    </div>
-  </div>
-
-
-  <!-- WATCHED -->
-  <h2>✅ Gesehen</h2>
-
-  <div class="games">
-    <div v-for="m in watchedMovies" :key="m.id" class="card">
-      <img v-if="m.image" :src="m.image" />
-      <h3>{{ m.name }}</h3>
+      <p class="status">
+        Status: {{ m.status || 'watchlist' }}
+      </p>
 
       <div class="buttons">
-        <button class="rewatch" @click="toRewatch(m)">🔄 Rewatch</button>
-        <button class="back" @click="backToList(m)">↩️ Zur Liste</button>
-        <button class="delete" @click="deleteMovie(m.id)">❌</button>
+        <button class="watched" @click="updateStatus(m, 'watched')">
+          ✅ Gesehen
+        </button>
+
+        <button class="rewatch" @click="updateStatus(m, 'rewatch')">
+          🔄 Rewatch
+        </button>
+
+        <button class="back" @click="updateStatus(m, 'watchlist')">
+          ↩️ Liste
+        </button>
+
+        <button class="delete" @click="deleteMovie(m.id)">
+          ❌
+        </button>
       </div>
-    </div>
-  </div>
 
-
-  <!-- REWATCH -->
-  <h2>🔄 Rewatch</h2>
-
-  <div class="games">
-    <div v-for="m in rewatchMovies" :key="m.id" class="card">
-      <img v-if="m.image" :src="m.image" />
-      <h3>{{ m.name }}</h3>
-
-      <div class="buttons">
-        <button class="watched" @click="toWatched(m)">✅ Gesehen</button>
-        <button class="back" @click="backToList(m)">↩️ Zur Liste</button>
-        <button class="delete" @click="deleteMovie(m.id)">❌</button>
-      </div>
     </div>
   </div>
 </template>
-
 
 <style>
 body {
@@ -205,59 +161,43 @@ body {
   padding: 20px;
 }
 
-/* TITLES */
-.title {
+h2 {
   text-align: center;
-  font-size: 26px;
-  margin-bottom: 20px;
-}
-
-.section-title {
-  font-size: 18px;
-  margin: 20px 0 10px;
-  opacity: 0.9;
+  margin-bottom: 15px;
+  font-size: 22px;
 }
 
 /* SEARCH */
 .search-wrapper {
   position: relative;
   width: 500px;
-  margin: 0 auto 30px auto;
+  margin: 0 auto 30px;
 }
 
 .search-wrapper input {
   width: 100%;
   padding: 14px;
-  font-size: 16px;
   border-radius: 10px;
   border: none;
-  outline: none;
   background: #1e293b;
   color: white;
-}
-
-.search-wrapper input::placeholder {
-  color: #94a3b8;
 }
 
 /* DROPDOWN */
 .dropdown {
   position: absolute;
   top: 110%;
-  left: 0;
-  right: 0;
+  width: 100%;
   background: #1e293b;
   border-radius: 10px;
   max-height: 260px;
   overflow-y: auto;
   z-index: 10;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 }
 
 .dropdown-item {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  gap: 10px;
   padding: 10px;
   cursor: pointer;
 }
@@ -278,28 +218,18 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 20px;
-  margin-top: 10px;
 }
 
 /* CARD */
 .card {
   background: #1e293b;
-  border-radius: 12px;
-  overflow: hidden;
   padding: 12px;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  transition: 0.25s;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
 
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 30px rgba(0,0,0,0.4);
-}
-
-/* IMAGE */
 .card img {
   width: 100%;
   height: 180px;
@@ -307,10 +237,10 @@ body {
   object-fit: cover;
 }
 
-/* TITLE */
-.card h3 {
-  font-size: 16px;
-  margin: 0;
+/* STATUS */
+.status {
+  font-size: 12px;
+  opacity: 0.7;
 }
 
 /* BUTTONS */
@@ -330,35 +260,8 @@ button {
   font-size: 13px;
 }
 
-.watched {
-  background: #22c55e;
-}
-
-.watched:hover {
-  background: #16a34a;
-}
-
-.rewatch {
-  background: #3b82f6;
-}
-
-.rewatch:hover {
-  background: #2563eb;
-}
-
-.back {
-  background: #f59e0b;
-}
-
-.back:hover {
-  background: #d97706;
-}
-
-.delete {
-  background: #ef4444;
-}
-
-.delete:hover {
-  background: #dc2626;
-}
+.watched { background: #22c55e; }
+.rewatch { background: #3b82f6; }
+.back { background: #f59e0b; }
+.delete { background: #ef4444; }
 </style>
