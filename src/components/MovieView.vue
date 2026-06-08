@@ -35,7 +35,6 @@ const loadMovies = async () => {
   const res = await fetch(`${API}/api/movies`)
   const data = await res.json()
 
-  // sort stable
   data.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
 
   watchlist.value = []
@@ -73,33 +72,39 @@ const addMovie = async (movie) => {
 }
 
 
-// 🔁 STATUS CHANGE (ROBUST FIX)
-const updateStatus = async (movie, status) => {
+// 🧠 LOCAL STATUS CHANGE (NO BACKEND YET)
+const updateStatus = (movie, status) => {
+  movie.status = status
+}
 
-  console.log("MOVE:", movie.id, "->", status)
 
-  try {
-    const res = await fetch(`${API}/api/movies/${movie.id}`, {
+// 💾 SAVE EVERYTHING TO BACKEND
+const saveChanges = async () => {
+  const all = [
+    ...watchlist.value,
+    ...watched.value,
+    ...rewatch.value
+  ]
+
+  for (let i = 0; i < all.length; i++) {
+    const m = all[i]
+
+    await fetch(`${API}/api/movies/${m.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status })
+      body: JSON.stringify({
+        status: m.status,
+        order: i
+      })
     })
-
-    if (!res.ok) {
-      console.error("PATCH failed")
-      return
-    }
-
-    await loadMovies()
-  } catch (err) {
-    console.error("ERROR:", err)
   }
+
+  await loadMovies()
 }
 
 
 // ❌ DELETE
 const deleteMovie = async (id) => {
-
   watchlist.value = watchlist.value.filter(m => m.id !== id)
   watched.value = watched.value.filter(m => m.id !== id)
   rewatch.value = rewatch.value.filter(m => m.id !== id)
