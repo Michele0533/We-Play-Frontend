@@ -1,16 +1,24 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 
+/* =========================
+   STATE
+========================= */
 const movies = ref([]);
 
-/* LOAD */
+/* =========================
+   LOAD MOVIES
+========================= */
 async function loadMovies() {
   const res = await fetch("http://localhost:3000/api/movies");
   movies.value = await res.json();
 }
-loadMovies();
 
-/* 🔁 MOVE TO NEXT LIST */
+onMounted(loadMovies);
+
+/* =========================
+   MOVE STATUS (CLICK)
+========================= */
 function moveMovie(movie) {
   const order = ["watchlist", "seen", "rewatch"];
 
@@ -26,7 +34,9 @@ function moveMovie(movie) {
   });
 }
 
-/* 🧠 3 LISTS */
+/* =========================
+   FILTER INTO COLUMNS
+========================= */
 const watchlist = computed(() =>
   movies.value.filter(m => m.status === "watchlist")
 );
@@ -96,21 +106,30 @@ const rewatch = computed(() =>
   display: flex;
   gap: 20px;
   align-items: flex-start;
+  padding: 20px;
 }
 
+/* COLUMN */
 .column {
   flex: 1;
-  background: #f7f7f7;
-  padding: 10px;
-  border-radius: 12px;
-  min-height: 300px;
+  background: #f5f5f5;
+  border-radius: 14px;
+  padding: 12px;
+  min-height: 400px;
 }
 
+.column h2 {
+  text-align: center;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+/* CARD */
 .card {
   background: white;
   margin-bottom: 10px;
+  border-radius: 12px;
   padding: 10px;
-  border-radius: 10px;
   cursor: pointer;
   transition: 0.2s;
 }
@@ -122,5 +141,11 @@ const rewatch = computed(() =>
 img {
   width: 100%;
   border-radius: 8px;
+}
+
+p {
+  margin-top: 6px;
+  text-align: center;
+  font-weight: bold;
 }
 </style>
