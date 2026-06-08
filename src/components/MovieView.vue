@@ -30,12 +30,15 @@ const searchMovies = async () => {
 }
 
 
-// 📥 LOAD + SORT (WICHTIG FIX)
+// 📥 LOAD + SORT
 const loadMovies = async () => {
   const res = await fetch(`${API}/api/movies`)
   const data = await res.json()
 
   console.log("BACKEND DATA:", data)
+
+  // 🔥 WICHTIG: Reihenfolge stabil halten
+  data.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
 
   watchlist.value = []
   watched.value = []
@@ -62,7 +65,8 @@ const addMovie = async (movie) => {
       image: movie.poster_path
         ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
         : '',
-      status: 'watchlist'
+      status: 'watchlist',
+      order: 9999 // kommt erstmal ans Ende
     })
   })
 
@@ -71,15 +75,29 @@ const addMovie = async (movie) => {
 }
 
 
-// 🔁 UPDATE STATUS (Backend Save)
+// 🔁 UPDATE STATUS + ORDER FIX
 const updateStatus = async (movie, status) => {
+  let targetList =
+    status === 'watched'
+      ? watched.value
+      : status === 'rewatch'
+        ? rewatch.value
+        : watchlist.value
+
+  const newOrder = targetList.length
+
   await fetch(`${API}/api/movies/${movie.id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status })
+    body: JSON.stringify({
+      status,
+      order: newOrder
+    })
   })
 
   movie.status = status
+  movie.order = newOrder
+
   loadMovies()
 }
 
