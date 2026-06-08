@@ -6,6 +6,8 @@ const API = "https://we-play-backend.onrender.com"
 const search = ref('')
 const movies = ref([])
 const myMovies = ref([])
+const watchedMovies = ref([])
+const rewatchMovies = ref([])
 const showDropdown = ref(false)
 
 // 🔍 Suche
@@ -34,7 +36,7 @@ const loadMovies = async () => {
 const addMovie = async (movie) => {
   await fetch(`${API}/api/movies`, {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       id: movie.id,
       name: movie.title || movie.name,
@@ -60,6 +62,18 @@ const deleteMovie = async (id) => {
   loadMovies()
 }
 
+// ✅ Gesehen
+const moveToWatched = (movie) => {
+  watchedMovies.value.push(movie)
+  myMovies.value = myMovies.value.filter(m => m.id !== movie.id)
+}
+
+// 🔄 Rewatch
+const moveToRewatch = (movie) => {
+  rewatchMovies.value.push(movie)
+  myMovies.value = myMovies.value.filter(m => m.id !== movie.id)
+}
+
 onMounted(loadMovies)
 </script>
 
@@ -67,21 +81,21 @@ onMounted(loadMovies)
   <h2>🎬 Movies & Serien</h2>
 
   <div class="search-wrapper">
-    <input 
-      v-model="search" 
-      placeholder="Film oder Serie suchen..." 
+    <input
+      v-model="search"
+      placeholder="Film oder Serie suchen..."
       @input="searchMovies"
       @focus="showDropdown = true"
     />
 
     <div v-if="showDropdown && movies.length" class="dropdown">
-      <div 
-        v-for="movie in movies" 
-        :key="movie.id" 
+      <div
+        v-for="movie in movies"
+        :key="movie.id"
         class="dropdown-item"
         @click="addMovie(movie)"
       >
-        <img 
+        <img
           v-if="movie.poster_path"
           :src="'https://image.tmdb.org/t/p/w500' + movie.poster_path"
         />
@@ -90,59 +104,59 @@ onMounted(loadMovies)
     </div>
   </div>
 
-  <h2>Meine Liste</h2>
+  <h2>📋 Meine Liste</h2>
 
   <div class="games">
     <div v-for="m in myMovies" :key="m.id" class="card">
       <img v-if="m.image" :src="m.image" />
       <h3>{{ m.name }}</h3>
-      <button @click="deleteMovie(m.id)">❌</button>
+
+      <div class="buttons">
+        <button class="watched-btn" @click="moveToWatched(m)">
+          ✅ Gesehen
+        </button>
+
+        <button class="rewatch-btn" @click="moveToRewatch(m)">
+          🔄 Rewatch
+        </button>
+
+        <button class="delete-btn" @click="deleteMovie(m.id)">
+          ❌
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <h2>✅ Gesehen</h2>
+
+  <div class="games">
+    <div v-for="m in watchedMovies" :key="m.id" class="card">
+      <img v-if="m.image" :src="m.image" />
+      <h3>{{ m.name }}</h3>
+    </div>
+  </div>
+
+  <h2>🔄 Rewatch</h2>
+
+  <div class="games">
+    <div v-for="m in rewatchMovies" :key="m.id" class="card">
+      <img v-if="m.image" :src="m.image" />
+      <h3>{{ m.name }}</h3>
     </div>
   </div>
 </template>
 
 <style>
-/* GENERAL */
 body {
   font-family: Arial, sans-serif;
   background:
     linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
     url('/maxresdefault.jpg') center/cover no-repeat fixed;
-
   color: #f1f5f9;
   margin: 0;
   padding: 20px;
 }
 
-h1 {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-/* NAV */
-nav {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 30px;
-}
-
-nav button {
-  padding: 10px 18px;
-  border: none;
-  border-radius: 8px;
-  background: #1e293b;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-nav button:hover {
-  background: #3b82f6;
-}
-
-/* SEARCH */
 .search-wrapper {
   position: relative;
   width: 500px;
@@ -160,11 +174,6 @@ nav button:hover {
   color: white;
 }
 
-.search-wrapper input::placeholder {
-  color: #94a3b8;
-}
-
-/* DROPDOWN */
 .dropdown {
   position: absolute;
   top: 110%;
@@ -175,7 +184,6 @@ nav button:hover {
   max-height: 260px;
   overflow-y: auto;
   z-index: 10;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 }
 
 .dropdown-item {
@@ -184,7 +192,6 @@ nav button:hover {
   gap: 12px;
   padding: 10px;
   cursor: pointer;
-  transition: 0.2s;
 }
 
 .dropdown-item:hover {
@@ -198,7 +205,6 @@ nav button:hover {
   object-fit: cover;
 }
 
-/* GRID */
 .games {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -206,7 +212,6 @@ nav button:hover {
   margin-top: 20px;
 }
 
-/* CARD */
 .card {
   background: #1e293b;
   border-radius: 12px;
@@ -215,16 +220,8 @@ nav button:hover {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  transition: 0.25s;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
 
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 30px rgba(0,0,0,0.4);
-}
-
-/* IMAGE */
 .card img {
   width: 100%;
   height: 180px;
@@ -232,25 +229,52 @@ nav button:hover {
   object-fit: cover;
 }
 
-/* TITLE */
 .card h3 {
-  font-size: 16px;
   margin: 0;
 }
 
-/* DELETE BUTTON */
-.card button {
-  margin-top: auto;
-  padding: 8px;
-  border: none;
-  border-radius: 6px;
-  background: #ef4444;
-  color: white;
-  cursor: pointer;
-  transition: 0.2s;
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.card button:hover {
+.watched-btn {
+  background: #22c55e;
+  color: white;
+  border: none;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.watched-btn:hover {
+  background: #16a34a;
+}
+
+.rewatch-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.rewatch-btn:hover {
+  background: #2563eb;
+}
+
+.delete-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
   background: #dc2626;
 }
 </style>
