@@ -25,29 +25,34 @@ const searchMovies = async () => {
   )
 
   const data = await res.json()
-  movies.value = data.results.slice(0, 10)
+  movies.value = data.results || []
   showDropdown.value = true
 }
 
 
-// 📥 LOAD
+// 📥 LOAD (SAFE VERSION)
 const loadMovies = async () => {
-  const res = await fetch(`${API}/api/movies`)
-  const data = await res.json()
+  try {
+    const res = await fetch(`${API}/api/movies`)
+    const data = await res.json()
 
-  data.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    console.log("BACKEND DATA:", data)
 
-  watchlist.value = []
-  watched.value = []
-  rewatch.value = []
+    watchlist.value = []
+    watched.value = []
+    rewatch.value = []
 
-  data.forEach(m => {
-    const status = (m.status || 'watchlist').toLowerCase()
+    data.forEach(m => {
+      const status = (m.status || 'watchlist')
 
-    if (status === 'watched') watched.value.push(m)
-    else if (status === 'rewatch') rewatch.value.push(m)
-    else watchlist.value.push(m)
-  })
+      if (status === 'watched') watched.value.push(m)
+      else if (status === 'rewatch') rewatch.value.push(m)
+      else watchlist.value.push(m)
+    })
+
+  } catch (err) {
+    console.error("LOAD ERROR:", err)
+  }
 }
 
 
@@ -62,8 +67,7 @@ const addMovie = async (movie) => {
       image: movie.poster_path
         ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
         : '',
-      status: 'watchlist',
-      order: 9999
+      status: 'watchlist'
     })
   })
 
@@ -72,46 +76,25 @@ const addMovie = async (movie) => {
 }
 
 
-// 🧠 LOCAL STATUS CHANGE (NO BACKEND YET)
-const updateStatus = (movie, status) => {
-  movie.status = status
-}
+// 🔁 STATUS UPDATE (SIMPLE + SAFE)
+const updateStatus = async (movie, status) => {
+  await fetch(`${API}/api/movies/${movie.id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status })
+  })
 
-
-// 💾 SAVE EVERYTHING TO BACKEND
-const saveChanges = async () => {
-  const all = [
-    ...watchlist.value,
-    ...watched.value,
-    ...rewatch.value
-  ]
-
-  for (let i = 0; i < all.length; i++) {
-    const m = all[i]
-
-    await fetch(`${API}/api/movies/${m.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        status: m.status,
-        order: i
-      })
-    })
-  }
-
-  await loadMovies()
+  loadMovies()
 }
 
 
 // ❌ DELETE
 const deleteMovie = async (id) => {
-  watchlist.value = watchlist.value.filter(m => m.id !== id)
-  watched.value = watched.value.filter(m => m.id !== id)
-  rewatch.value = rewatch.value.filter(m => m.id !== id)
-
   await fetch(`${API}/api/movies/${id}`, {
     method: 'DELETE'
   })
+
+  loadMovies()
 }
 
 
@@ -124,5 +107,8 @@ const resetSearch = () => {
 
 
 // 🚀 INIT
-onMounted(loadMovies)
+onMounted(() => {
+  console.log("APP START")
+  loadMovies()
+})
 </script>
