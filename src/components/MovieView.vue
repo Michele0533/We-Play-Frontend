@@ -195,43 +195,69 @@ onMounted(async () => {
 
 <style>
 body {
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   background:
     linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
     url('/maxresdefault.jpg') center/cover no-repeat fixed;
+
   color: #f1f5f9;
   margin: 0;
   padding: 20px;
 }
 
+/* TITLES */
+.title {
+  text-align: center;
+  font-size: 26px;
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 18px;
+  margin: 20px 0 10px;
+  opacity: 0.9;
+}
+
+/* SEARCH */
 .search-wrapper {
   position: relative;
   width: 500px;
-  margin: 0 auto 30px;
+  margin: 0 auto 30px auto;
 }
 
 .search-wrapper input {
   width: 100%;
   padding: 14px;
+  font-size: 16px;
   border-radius: 10px;
   border: none;
+  outline: none;
   background: #1e293b;
   color: white;
 }
 
+.search-wrapper input::placeholder {
+  color: #94a3b8;
+}
+
+/* DROPDOWN */
 .dropdown {
   position: absolute;
   top: 110%;
-  width: 100%;
+  left: 0;
+  right: 0;
   background: #1e293b;
   border-radius: 10px;
   max-height: 260px;
   overflow-y: auto;
+  z-index: 10;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 }
 
 .dropdown-item {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 12px;
   padding: 10px;
   cursor: pointer;
 }
@@ -243,32 +269,51 @@ body {
 .dropdown-item img {
   width: 45px;
   height: 45px;
-  object-fit: cover;
   border-radius: 6px;
+  object-fit: cover;
 }
 
+/* GRID */
 .games {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 20px;
+  margin-top: 10px;
 }
 
+/* CARD */
 .card {
   background: #1e293b;
-  padding: 12px;
   border-radius: 12px;
+  overflow: hidden;
+  padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  transition: 0.25s;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
 
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+}
+
+/* IMAGE */
 .card img {
   width: 100%;
   height: 180px;
-  object-fit: cover;
   border-radius: 8px;
+  object-fit: cover;
 }
 
+/* TITLE */
+.card h3 {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* BUTTONS */
 .buttons {
   display: flex;
   flex-wrap: wrap;
@@ -277,15 +322,43 @@ body {
 
 button {
   flex: 1;
-  padding: 6px;
+  padding: 8px;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   color: white;
+  font-size: 13px;
 }
 
-.watched { background: #22c55e; }
-.rewatch { background: #3b82f6; }
-.back { background: #f59e0b; }
-.delete { background: #ef4444; }
+.watched {
+  background: #22c55e;
+}
+
+.watched:hover {
+  background: #16a34a;
+}
+
+.rewatch {
+  background: #3b82f6;
+}
+
+.rewatch:hover {
+  background: #2563eb;
+}
+
+.back {
+  background: #f59e0b;
+}
+
+.back:hover {
+  background: #d97706;
+}
+
+.delete {
+  background: #ef4444;
+}
+
+.delete:hover {
+  background: #dc2626;
+}
 </style>
