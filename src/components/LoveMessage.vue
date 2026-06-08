@@ -1,61 +1,69 @@
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, watch } from 'vue'
 
-const movies = ref([]);
-const filter = ref("watchlist");
+/* =========================
+   POPUP STATE
+========================= */
+const showMessage = ref(false)
+const redeemed = ref(false)
 
-async function loadMovies() {
-  const res = await fetch("http://localhost:3000/api/movies");
-  movies.value = await res.json();
-}
-loadMovies();
+/* FREEZE BACKGROUND */
+watch(showMessage, (val) => {
+  document.body.style.overflow = val ? 'hidden' : ''
+  document.documentElement.style.overflow = val ? 'hidden' : ''
+})
 
-/* FILTER */
-const filteredMovies = computed(() =>
-  movies.value.filter(m => m.status === filter.value)
-);
-
-/* 🔁 CYCLE STATUS */
-function cycleStatus(movie) {
-  const order = ["watchlist", "seen", "rewatch"];
-
-  const currentIndex = order.indexOf(movie.status);
-  const nextStatus = order[(currentIndex + 1) % order.length];
-
-  movie.status = nextStatus;
-
-  fetch(`http://localhost:3000/api/movies/${movie.id}/status`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status: nextStatus })
-  });
+function redeem() {
+  redeemed.value = true
 }
 </script>
 
 <template>
-  <!-- MINI FILTER (optional, nur oben) -->
-  <div class="tabs">
-    <span @click="filter = 'watchlist'">📌 Watchlist</span>
-    <span @click="filter = 'seen'">✅ Seen</span>
-    <span @click="filter = 'rewatch'">🔁 Rewatch</span>
-  </div>
+  <!-- BUTTON -->
+  <button class="love-button" @click="showMessage = true">
+    💳 Gutschein öffnen
+  </button>
 
-  <!-- LIST -->
-  <div class="grid">
-    <div v-for="movie in filteredMovies" :key="movie.id" class="card">
-      
-      <img :src="movie.image" />
-      <h3>{{ movie.name }}</h3>
+  <!-- OVERLAY -->
+  <div v-if="showMessage" class="overlay">
+    <div class="card">
 
-      <!-- 🔥 EINZIGER TOGGLE -->
-      <div class="status" @click="cycleStatus(movie)">
-        {{
-          movie.status === "watchlist"
-            ? "📌 Watchlist"
-            : movie.status === "seen"
-            ? "✅ Seen"
-            : "🔁 Rewatch"
-        }}
+      <!-- HEADER -->
+      <div class="card-header">
+        <div class="title">GUTSCHEIN</div>
+        <div class="subtitle">nur für dich ❤️</div>
+      </div>
+
+      <!-- BODY -->
+      <div class="card-body">
+        <div class="big">
+          {{ redeemed ? "✔ EINGELÖST 💖" : "1x Wunsch alles was du willst" }}
+        </div>
+
+        <div class="small">
+          gültig: für immer • personalisiert
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="card-footer">
+
+        <button
+          v-if="!redeemed"
+          class="redeem"
+          @click="redeem"
+        >
+          Einlösen 🎁
+        </button>
+
+        <div v-else class="used">
+          Schon eingelöst 💖
+        </div>
+
+        <button class="close" @click="showMessage = false">
+          Schließen
+        </button>
+
       </div>
 
     </div>
@@ -63,50 +71,105 @@ function cycleStatus(movie) {
 </template>
 
 <style scoped>
-.tabs {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-  font-weight: bold;
+/* BUTTON */
+.love-button{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:#ff4fa3;
+  border:none;
+  padding:14px 18px;
+  border-radius:30px;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
 }
 
-.tabs span {
-  cursor: pointer;
-  opacity: 0.6;
+/* OVERLAY */
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.65);
+  display:flex;
+  justify-content:center;
+  align-items:center;
 }
 
-.tabs span:hover {
-  opacity: 1;
+/* CARD */
+.card{
+  width:340px;
+  border-radius:22px;
+  background:linear-gradient(135deg,#ff4fa3,#ff8cc6);
+  color:white;
+  padding:22px;
+  box-shadow:0 12px 35px rgba(0,0,0,0.45);
+  font-family: Arial, sans-serif;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
+/* HEADER */
+.card-header{
+  text-align:center;
+  letter-spacing:2px;
 }
 
-.card {
-  background: #fff;
-  padding: 10px;
-  border-radius: 12px;
+.title{
+  font-size:22px;
+  font-weight:bold;
 }
 
-img {
-  width: 100%;
-  border-radius: 10px;
+.subtitle{
+  font-size:14px;
+  opacity:0.9;
+  margin-top:4px;
 }
 
-.status {
-  margin-top: 10px;
-  padding: 6px;
-  border-radius: 8px;
-  background: #f2f2f2;
-  cursor: pointer;
-  text-align: center;
-  font-weight: bold;
+/* BODY */
+.card-body{
+  margin-top:22px;
+  text-align:center;
 }
 
-.status:hover {
-  background: #ddd;
+.big{
+  font-size:18px;
+  font-weight:bold;
+}
+
+.small{
+  font-size:12px;
+  opacity:0.8;
+  margin-top:6px;
+}
+
+/* FOOTER */
+.card-footer{
+  margin-top:22px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+/* BUTTONS */
+.redeem{
+  background:white;
+  color:#ff4fa3;
+  border:none;
+  padding:10px;
+  border-radius:12px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.close{
+  background:rgba(255,255,255,0.25);
+  border:none;
+  padding:8px;
+  border-radius:10px;
+  color:white;
+  cursor:pointer;
+}
+
+.used{
+  text-align:center;
+  font-weight:bold;
 }
 </style>
