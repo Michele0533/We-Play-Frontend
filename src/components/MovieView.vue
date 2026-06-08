@@ -5,10 +5,13 @@ const API = "https://we-play-backend.onrender.com"
 
 const search = ref('')
 const movies = ref([])
+
 const myMovies = ref([])
 const watchedMovies = ref([])
 const rewatchMovies = ref([])
+
 const showDropdown = ref(false)
+
 
 // 🔍 Suche
 const searchMovies = async () => {
@@ -26,11 +29,13 @@ const searchMovies = async () => {
   showDropdown.value = true
 }
 
-// 📥 Liste laden
+
+// 📥 Laden
 const loadMovies = async () => {
   const res = await fetch(`${API}/api/movies`)
   myMovies.value = await res.json()
 }
+
 
 // ➕ hinzufügen
 const addMovie = async (movie) => {
@@ -42,44 +47,75 @@ const addMovie = async (movie) => {
       name: movie.title || movie.name,
       image: movie.poster_path
         ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-        : ''
+        : '',
+      status: 'watchlist'
     })
   })
 
-  showDropdown.value = false
+  resetSearch()
+  loadMovies()
+}
+
+
+// ❌ löschen (auch lokal entfernen)
+const deleteMovie = async (id) => {
+  await fetch(`${API}/api/movies/${id}`, { method: 'DELETE' })
+
+  myMovies.value = myMovies.value.filter(m => m.id !== id)
+  watchedMovies.value = watchedMovies.value.filter(m => m.id !== id)
+  rewatchMovies.value = rewatchMovies.value.filter(m => m.id !== id)
+}
+
+
+// 📦 Status ändern
+const setStatus = (movie, status) => {
+  removeFromAll(movie)
+
+  if (status === 'watchlist') myMovies.value.push(movie)
+  if (status === 'watched') watchedMovies.value.push(movie)
+  if (status === 'rewatch') rewatchMovies.value.push(movie)
+}
+
+
+// 🧹 aus allen Listen entfernen
+const removeFromAll = (movie) => {
+  myMovies.value = myMovies.value.filter(m => m.id !== movie.id)
+  watchedMovies.value = watchedMovies.value.filter(m => m.id !== movie.id)
+  rewatchMovies.value = rewatchMovies.value.filter(m => m.id !== movie.id)
+}
+
+
+// 🔁 Status-Wechsel Helfer
+const toWatched = (movie) => setStatus(movie, 'watched')
+const toRewatch = (movie) => setStatus(movie, 'rewatch')
+const backToList = (movie) => setStatus(movie, 'watchlist')
+
+
+// 🔍 Reset Search
+const resetSearch = () => {
   search.value = ''
   movies.value = []
-
-  loadMovies()
+  showDropdown.value = false
 }
 
-// ❌ löschen
-const deleteMovie = async (id) => {
-  await fetch(`${API}/api/movies/${id}`, {
-    method: 'DELETE'
+
+// 📥 initial laden + sortieren
+onMounted(async () => {
+  const res = await fetch(`${API}/api/movies`)
+  const data = await res.json()
+
+  data.forEach(m => {
+    if (!m.status || m.status === 'watchlist') myMovies.value.push(m)
+    else if (m.status === 'watched') watchedMovies.value.push(m)
+    else if (m.status === 'rewatch') rewatchMovies.value.push(m)
   })
-
-  loadMovies()
-}
-
-// ✅ Gesehen
-const moveToWatched = (movie) => {
-  watchedMovies.value.push(movie)
-  myMovies.value = myMovies.value.filter(m => m.id !== movie.id)
-}
-
-// 🔄 Rewatch
-const moveToRewatch = (movie) => {
-  rewatchMovies.value.push(movie)
-  myMovies.value = myMovies.value.filter(m => m.id !== movie.id)
-}
-
-onMounted(loadMovies)
+})
 </script>
 
 <template>
   <h2>🎬 Movies & Serien</h2>
 
+  <!-- SEARCH -->
   <div class="search-wrapper">
     <input
       v-model="search"
@@ -104,6 +140,8 @@ onMounted(loadMovies)
     </div>
   </div>
 
+
+  <!-- WATCHLIST -->
   <h2>📋 Meine Liste</h2>
 
   <div class="games">
@@ -112,43 +150,52 @@ onMounted(loadMovies)
       <h3>{{ m.name }}</h3>
 
       <div class="buttons">
-        <button class="watched-btn" @click="moveToWatched(m)">
-          ✅ Gesehen
-        </button>
-
-        <button class="rewatch-btn" @click="moveToRewatch(m)">
-          🔄 Rewatch
-        </button>
-
-        <button class="delete-btn" @click="deleteMovie(m.id)">
-          ❌
-        </button>
+        <button class="watched" @click="toWatched(m)">✅ Gesehen</button>
+        <button class="rewatch" @click="toRewatch(m)">🔄 Rewatch</button>
+        <button class="delete" @click="deleteMovie(m.id)">❌</button>
       </div>
     </div>
   </div>
 
+
+  <!-- WATCHED -->
   <h2>✅ Gesehen</h2>
 
   <div class="games">
     <div v-for="m in watchedMovies" :key="m.id" class="card">
       <img v-if="m.image" :src="m.image" />
       <h3>{{ m.name }}</h3>
+
+      <div class="buttons">
+        <button class="rewatch" @click="toRewatch(m)">🔄 Rewatch</button>
+        <button class="back" @click="backToList(m)">↩️ Zur Liste</button>
+        <button class="delete" @click="deleteMovie(m.id)">❌</button>
+      </div>
     </div>
   </div>
 
+
+  <!-- REWATCH -->
   <h2>🔄 Rewatch</h2>
 
   <div class="games">
     <div v-for="m in rewatchMovies" :key="m.id" class="card">
       <img v-if="m.image" :src="m.image" />
       <h3>{{ m.name }}</h3>
+
+      <div class="buttons">
+        <button class="watched" @click="toWatched(m)">✅ Gesehen</button>
+        <button class="back" @click="backToList(m)">↩️ Zur Liste</button>
+        <button class="delete" @click="deleteMovie(m.id)">❌</button>
+      </div>
     </div>
   </div>
 </template>
 
+
 <style>
 body {
-  font-family: Arial, sans-serif;
+  font-family: Arial;
   background:
     linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
     url('/maxresdefault.jpg') center/cover no-repeat fixed;
@@ -160,16 +207,14 @@ body {
 .search-wrapper {
   position: relative;
   width: 500px;
-  margin: 0 auto 30px auto;
+  margin: 0 auto 30px;
 }
 
 .search-wrapper input {
   width: 100%;
   padding: 14px;
-  font-size: 16px;
   border-radius: 10px;
   border: none;
-  outline: none;
   background: #1e293b;
   color: white;
 }
@@ -177,19 +222,16 @@ body {
 .dropdown {
   position: absolute;
   top: 110%;
-  left: 0;
-  right: 0;
+  width: 100%;
   background: #1e293b;
   border-radius: 10px;
   max-height: 260px;
   overflow-y: auto;
-  z-index: 10;
 }
 
 .dropdown-item {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  gap: 10px;
   padding: 10px;
   cursor: pointer;
 }
@@ -201,22 +243,20 @@ body {
 .dropdown-item img {
   width: 45px;
   height: 45px;
-  border-radius: 6px;
   object-fit: cover;
+  border-radius: 6px;
 }
 
 .games {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 20px;
-  margin-top: 20px;
 }
 
 .card {
   background: #1e293b;
-  border-radius: 12px;
-  overflow: hidden;
   padding: 12px;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -225,56 +265,27 @@ body {
 .card img {
   width: 100%;
   height: 180px;
-  border-radius: 8px;
   object-fit: cover;
-}
-
-.card h3 {
-  margin: 0;
+  border-radius: 8px;
 }
 
 .buttons {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
-.watched-btn {
-  background: #22c55e;
-  color: white;
+button {
+  flex: 1;
+  padding: 6px;
   border: none;
-  padding: 8px;
   border-radius: 6px;
   cursor: pointer;
-}
-
-.watched-btn:hover {
-  background: #16a34a;
-}
-
-.rewatch-btn {
-  background: #3b82f6;
   color: white;
-  border: none;
-  padding: 8px;
-  border-radius: 6px;
-  cursor: pointer;
 }
 
-.rewatch-btn:hover {
-  background: #2563eb;
-}
-
-.delete-btn {
-  background: #ef4444;
-  color: white;
-  border: none;
-  padding: 8px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.delete-btn:hover {
-  background: #dc2626;
-}
+.watched { background: #22c55e; }
+.rewatch { background: #3b82f6; }
+.back { background: #f59e0b; }
+.delete { background: #ef4444; }
 </style>
