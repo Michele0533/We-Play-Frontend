@@ -2,12 +2,12 @@
 import { ref, onMounted, computed } from "vue";
 
 /* =========================
-   STATE
+   STATE (DEIN ORIGINAL BLEIBT)
 ========================= */
 const movies = ref([]);
 
 /* =========================
-   LOAD MOVIES
+   LOAD (UNVERÄNDERTER FLOW)
 ========================= */
 async function loadMovies() {
   const res = await fetch("http://localhost:3000/api/movies");
@@ -17,13 +17,13 @@ async function loadMovies() {
 onMounted(loadMovies);
 
 /* =========================
-   MOVE STATUS (CLICK)
+   MOVE LOGIC (NEU ABER CLEAN)
 ========================= */
 function moveMovie(movie) {
   const order = ["watchlist", "seen", "rewatch"];
 
-  const nextStatus =
-    order[(order.indexOf(movie.status) + 1) % order.length];
+  const currentIndex = order.indexOf(movie.status || "watchlist");
+  const nextStatus = order[(currentIndex + 1) % order.length];
 
   movie.status = nextStatus;
 
@@ -35,10 +35,10 @@ function moveMovie(movie) {
 }
 
 /* =========================
-   FILTER INTO COLUMNS
+   FILTER LISTEN (DEIN “UNTEN SYSTEM”)
 ========================= */
 const watchlist = computed(() =>
-  movies.value.filter(m => m.status === "watchlist")
+  movies.value.filter(m => (m.status || "watchlist") === "watchlist")
 );
 
 const seen = computed(() =>
@@ -105,31 +105,22 @@ const rewatch = computed(() =>
 .board {
   display: flex;
   gap: 20px;
-  align-items: flex-start;
   padding: 20px;
 }
 
-/* COLUMN */
 .column {
   flex: 1;
-  background: #f5f5f5;
-  border-radius: 14px;
-  padding: 12px;
+  background: #f4f4f4;
+  border-radius: 12px;
+  padding: 10px;
   min-height: 400px;
 }
 
-.column h2 {
-  text-align: center;
-  font-size: 16px;
-  margin-bottom: 10px;
-}
-
-/* CARD */
 .card {
   background: white;
   margin-bottom: 10px;
-  border-radius: 12px;
   padding: 10px;
+  border-radius: 10px;
   cursor: pointer;
   transition: 0.2s;
 }
@@ -144,7 +135,6 @@ img {
 }
 
 p {
-  margin-top: 6px;
   text-align: center;
   font-weight: bold;
 }
