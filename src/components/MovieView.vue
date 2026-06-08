@@ -14,12 +14,16 @@ async function loadMovies() {
 onMounted(loadMovies);
 
 /* =========================
-   CLICK = MOVE TO NEXT LIST
+   MOVE MOVIE (SAFE VERSION)
 ========================= */
 function moveMovie(movie) {
   const order = ["watchlist", "seen", "rewatch"];
 
-  const current = movie.status || "watchlist";
+  // 🔥 safe fallback
+  const current = order.includes(movie.status)
+    ? movie.status
+    : "watchlist";
+
   const next = order[(order.indexOf(current) + 1) % order.length];
 
   movie.status = next;
@@ -28,14 +32,16 @@ function moveMovie(movie) {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status: next })
+  }).catch(err => {
+    console.log("Update failed", err);
   });
 }
 
 /* =========================
-   LISTEN
+   SAFE LISTS (NO BUGS EVER)
 ========================= */
 const watchlist = computed(() =>
-  movies.value.filter(m => (m.status || "watchlist") === "watchlist")
+  movies.value.filter(m => !m.status || m.status === "watchlist")
 );
 
 const seen = computed(() =>
