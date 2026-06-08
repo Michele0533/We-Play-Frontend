@@ -1,49 +1,43 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 
-/* =========================
-   STATE
-========================= */
 const movies = ref([]);
-const filter = ref("watchlist"); // watchlist | seen | rewatch
+const filter = ref("watchlist");
 
-/* =========================
-   LOAD DATA
-========================= */
 async function loadMovies() {
   const res = await fetch("http://localhost:3000/api/movies");
   movies.value = await res.json();
 }
+loadMovies();
 
-onMounted(loadMovies);
-
-/* =========================
-   FILTERED VIEW
-========================= */
+/* FILTER */
 const filteredMovies = computed(() =>
   movies.value.filter(m => m.status === filter.value)
 );
 
-/* =========================
-   UPDATE STATUS
-========================= */
-async function updateStatus(movie, newStatus) {
-  movie.status = newStatus;
+/* 🔁 CYCLE STATUS */
+function cycleStatus(movie) {
+  const order = ["watchlist", "seen", "rewatch"];
 
-  await fetch(`http://localhost:3000/api/movies/${movie.id}/status`, {
+  const currentIndex = order.indexOf(movie.status);
+  const nextStatus = order[(currentIndex + 1) % order.length];
+
+  movie.status = nextStatus;
+
+  fetch(`http://localhost:3000/api/movies/${movie.id}/status`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status: newStatus })
+    body: JSON.stringify({ status: nextStatus })
   });
 }
 </script>
 
 <template>
-  <!-- FILTER TABS -->
+  <!-- MINI FILTER (optional, nur oben) -->
   <div class="tabs">
-    <button @click="filter = 'watchlist'">📌 Watchlist</button>
-    <button @click="filter = 'seen'">✅ Seen</button>
-    <button @click="filter = 'rewatch'">🔁 Rewatch</button>
+    <span @click="filter = 'watchlist'">📌 Watchlist</span>
+    <span @click="filter = 'seen'">✅ Seen</span>
+    <span @click="filter = 'rewatch'">🔁 Rewatch</span>
   </div>
 
   <!-- LIST -->
@@ -53,15 +47,16 @@ async function updateStatus(movie, newStatus) {
       <img :src="movie.image" />
       <h3>{{ movie.name }}</h3>
 
-      <!-- STATUS SWITCH -->
-      <select
-        v-model="movie.status"
-        @change="updateStatus(movie, movie.status)"
-      >
-        <option value="watchlist">Watchlist</option>
-        <option value="seen">Seen</option>
-        <option value="rewatch">Rewatch</option>
-      </select>
+      <!-- 🔥 EINZIGER TOGGLE -->
+      <div class="status" @click="cycleStatus(movie)">
+        {{
+          movie.status === "watchlist"
+            ? "📌 Watchlist"
+            : movie.status === "seen"
+            ? "✅ Seen"
+            : "🔁 Rewatch"
+        }}
+      </div>
 
     </div>
   </div>
@@ -71,15 +66,17 @@ async function updateStatus(movie, newStatus) {
 .tabs {
   display: flex;
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
+  font-weight: bold;
 }
 
-button {
-  padding: 8px 12px;
-  border: none;
-  border-radius: 10px;
+.tabs span {
   cursor: pointer;
-  background: #eee;
+  opacity: 0.6;
+}
+
+.tabs span:hover {
+  opacity: 1;
 }
 
 .grid {
@@ -93,12 +90,23 @@ button {
   padding: 10px;
   border-radius: 12px;
 }
+
 img {
   width: 100%;
   border-radius: 10px;
 }
-select {
+
+.status {
   margin-top: 10px;
-  width: 100%;
+  padding: 6px;
+  border-radius: 8px;
+  background: #f2f2f2;
+  cursor: pointer;
+  text-align: center;
+  font-weight: bold;
+}
+
+.status:hover {
+  background: #ddd;
 }
 </style>
