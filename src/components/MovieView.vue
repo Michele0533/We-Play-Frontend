@@ -4,7 +4,7 @@ import { ref, onMounted, computed } from "vue";
 const movies = ref([]);
 
 /* =========================
-   LOAD DATA
+   LOAD
 ========================= */
 async function loadMovies() {
   const res = await fetch("http://localhost:3000/api/movies");
@@ -14,7 +14,7 @@ async function loadMovies() {
 onMounted(loadMovies);
 
 /* =========================
-   MOVE CARD (NO BUTTONS)
+   CLICK = MOVE TO NEXT LIST
 ========================= */
 function moveMovie(movie) {
   const order = ["watchlist", "seen", "rewatch"];
@@ -32,7 +32,7 @@ function moveMovie(movie) {
 }
 
 /* =========================
-   COLUMNS
+   LISTEN
 ========================= */
 const watchlist = computed(() =>
   movies.value.filter(m => (m.status || "watchlist") === "watchlist")
@@ -50,7 +50,7 @@ const rewatch = computed(() =>
 <template>
   <div class="board">
 
-    <!-- WATCHLIST -->
+    <!-- 📌 WATCHLIST -->
     <div class="column">
       <h2>📌 Watchlist</h2>
 
@@ -65,7 +65,7 @@ const rewatch = computed(() =>
       </div>
     </div>
 
-    <!-- SEEN -->
+    <!-- ✅ SEEN -->
     <div class="column">
       <h2>✅ Seen</h2>
 
@@ -80,7 +80,7 @@ const rewatch = computed(() =>
       </div>
     </div>
 
-    <!-- REWATCH -->
+    <!-- 🔁 REWATCH -->
     <div class="column">
       <h2>🔁 Rewatch</h2>
 
