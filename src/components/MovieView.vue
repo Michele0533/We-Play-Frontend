@@ -12,8 +12,9 @@ const rewatch = ref([])
 
 const showDropdown = ref(false)
 
-
-// 🔍 SEARCH
+/* =========================
+ 🔍 SEARCH
+========================= */
 const searchMovies = async () => {
   if (!search.value.trim()) {
     movies.value = []
@@ -29,13 +30,12 @@ const searchMovies = async () => {
   showDropdown.value = true
 }
 
-
-// 📥 LOAD + SORT
+/* =========================
+ 📥 LOAD + SORT
+========================= */
 const loadMovies = async () => {
   const res = await fetch(`${API}/api/movies`)
   const data = await res.json()
-
-  console.log("BACKEND DATA:", data)
 
   watchlist.value = []
   watched.value = []
@@ -50,8 +50,9 @@ const loadMovies = async () => {
   })
 }
 
-
-// ➕ ADD MOVIE
+/* =========================
+ ➕ ADD MOVIE
+========================= */
 const addMovie = async (movie) => {
   await fetch(`${API}/api/movies`, {
     method: 'POST',
@@ -70,20 +71,30 @@ const addMovie = async (movie) => {
   loadMovies()
 }
 
-
-// 🔁 UPDATE STATUS
+/* =========================
+ ⚡ LIVE MOVE STATUS (FIX)
+========================= */
 const updateStatus = async (movie, status) => {
-  await fetch(`${API}/api/movies/${movie.id}`, {
+  movie.status = status
+
+  watchlist.value = watchlist.value.filter(m => m.id !== movie.id)
+  watched.value = watched.value.filter(m => m.id !== movie.id)
+  rewatch.value = rewatch.value.filter(m => m.id !== movie.id)
+
+  if (status === 'watched') watched.value.push(movie)
+  else if (status === 'rewatch') rewatch.value.push(movie)
+  else watchlist.value.push(movie)
+
+  fetch(`${API}/api/movies/${movie.id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status })
   })
-
-  loadMovies()
 }
 
-
-// ❌ DELETE
+/* =========================
+ ❌ DELETE
+========================= */
 const deleteMovie = async (id) => {
   await fetch(`${API}/api/movies/${id}`, {
     method: 'DELETE'
@@ -92,16 +103,18 @@ const deleteMovie = async (id) => {
   loadMovies()
 }
 
-
-// 🔍 RESET SEARCH
+/* =========================
+ 🔍 RESET SEARCH
+========================= */
 const resetSearch = () => {
   search.value = ''
   movies.value = []
   showDropdown.value = false
 }
 
-
-// 🚀 INIT
+/* =========================
+ 🚀 INIT
+========================= */
 onMounted(loadMovies)
 </script>
 
