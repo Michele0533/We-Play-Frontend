@@ -1,308 +1,126 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from "vue";
 
-const API = "https://we-play-backend.onrender.com"
+const movies = ref([]);
 
-const search = ref('')
-const movies = ref([])
+/* LOAD */
+async function loadMovies() {
+  const res = await fetch("http://localhost:3000/api/movies");
+  movies.value = await res.json();
+}
+loadMovies();
 
-const watchlist = ref([])
-const watched = ref([])
-const rewatch = ref([])
+/* 🔁 MOVE TO NEXT LIST */
+function moveMovie(movie) {
+  const order = ["watchlist", "seen", "rewatch"];
 
-const showDropdown = ref(false)
+  const nextStatus =
+    order[(order.indexOf(movie.status) + 1) % order.length];
 
+  movie.status = nextStatus;
 
-// 🔍 SEARCH
-const searchMovies = async () => {
-  if (!search.value.trim()) {
-    movies.value = []
-    return
-  }
-
-  const res = await fetch(
-    `https://api.themoviedb.org/3/search/multi?api_key=a57b9c639bd4d8f0ec3b12594c9fbdfb&query=${search.value}`
-  )
-
-  const data = await res.json()
-  movies.value = data.results.slice(0, 10)
-  showDropdown.value = true
+  fetch(`http://localhost:3000/api/movies/${movie.id}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status: nextStatus })
+  });
 }
 
+/* 🧠 3 LISTS */
+const watchlist = computed(() =>
+  movies.value.filter(m => m.status === "watchlist")
+);
 
-// 📥 LOAD + SORT
-const loadMovies = async () => {
-  const res = await fetch(`${API}/api/movies`)
-  const data = await res.json()
+const seen = computed(() =>
+  movies.value.filter(m => m.status === "seen")
+);
 
-  console.log("BACKEND DATA:", data)
-
-  // 🔥 WICHTIG: Reihenfolge stabil halten
-  data.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-
-  watchlist.value = []
-  watched.value = []
-  rewatch.value = []
-
-  data.forEach(m => {
-    const status = (m.status || 'watchlist').toLowerCase()
-
-    if (status === 'watched') watched.value.push(m)
-    else if (status === 'rewatch') rewatch.value.push(m)
-    else watchlist.value.push(m)
-  })
-}
-
-
-// ➕ ADD MOVIE
-const addMovie = async (movie) => {
-  await fetch(`${API}/api/movies`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      id: movie.id,
-      name: movie.title || movie.name,
-      image: movie.poster_path
-        ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-        : '',
-      status: 'watchlist',
-      order: 9999 // kommt erstmal ans Ende
-    })
-  })
-
-  resetSearch()
-  loadMovies()
-}
-
-
-// 🔁 UPDATE STATUS + ORDER FIX
-const updateStatus = async (movie, status) => {
-  let targetList =
-    status === 'watched'
-      ? watched.value
-      : status === 'rewatch'
-        ? rewatch.value
-        : watchlist.value
-
-  const newOrder = targetList.length
-
-  await fetch(`${API}/api/movies/${movie.id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      status,
-      order: newOrder
-    })
-  })
-
-  movie.status = status
-  movie.order = newOrder
-
-  loadMovies()
-}
-
-
-// ❌ DELETE
-const deleteMovie = async (id) => {
-  await fetch(`${API}/api/movies/${id}`, {
-    method: 'DELETE'
-  })
-
-  loadMovies()
-}
-
-
-// 🔍 RESET SEARCH
-const resetSearch = () => {
-  search.value = ''
-  movies.value = []
-  showDropdown.value = false
-}
-
-
-// 🚀 INIT
-onMounted(loadMovies)
+const rewatch = computed(() =>
+  movies.value.filter(m => m.status === "rewatch")
+);
 </script>
 
 <template>
-  <h2>🎬 Movies & Serien</h2>
+  <div class="board">
 
-  <!-- SEARCH -->
-  <div class="search-wrapper">
-    <input
-      v-model="search"
-      placeholder="Film oder Serie suchen..."
-      @input="searchMovies"
-      @focus="showDropdown = true"
-    />
+    <!-- 📌 WATCHLIST -->
+    <div class="column">
+      <h2>📌 Watchlist</h2>
 
-    <div v-if="showDropdown && movies.length" class="dropdown">
       <div
-        v-for="movie in movies"
+        v-for="movie in watchlist"
         :key="movie.id"
-        class="dropdown-item"
-        @click="addMovie(movie)"
+        class="card"
+        @click="moveMovie(movie)"
       >
-        <img
-          v-if="movie.poster_path"
-          :src="'https://image.tmdb.org/t/p/w500' + movie.poster_path"
-        />
-        <span>{{ movie.title || movie.name }}</span>
+        <img :src="movie.image" />
+        <p>{{ movie.name }}</p>
       </div>
     </div>
-  </div>
 
-  <!-- WATCHLIST -->
-  <h2>📋 Watchlist</h2>
-  <div class="games">
-    <div v-for="m in watchlist" :key="m.id" class="card">
-      <img v-if="m.image" :src="m.image" />
-      <h3>{{ m.name }}</h3>
+    <!-- ✅ SEEN -->
+    <div class="column">
+      <h2>✅ Seen</h2>
 
-      <div class="buttons">
-        <button class="watched" @click="updateStatus(m, 'watched')">✅ Gesehen</button>
-        <button class="rewatch" @click="updateStatus(m, 'rewatch')">🔄 Rewatch</button>
-        <button class="delete" @click="deleteMovie(m.id)">❌</button>
+      <div
+        v-for="movie in seen"
+        :key="movie.id"
+        class="card"
+        @click="moveMovie(movie)"
+      >
+        <img :src="movie.image" />
+        <p>{{ movie.name }}</p>
       </div>
     </div>
-  </div>
 
-  <!-- WATCHED -->
-  <h2>✅ Gesehen</h2>
-  <div class="games">
-    <div v-for="m in watched" :key="m.id" class="card">
-      <img v-if="m.image" :src="m.image" />
-      <h3>{{ m.name }}</h3>
+    <!-- 🔁 REWATCH -->
+    <div class="column">
+      <h2>🔁 Rewatch</h2>
 
-      <div class="buttons">
-        <button class="rewatch" @click="updateStatus(m, 'rewatch')">🔄 Rewatch</button>
-        <button class="back" @click="updateStatus(m, 'watchlist')">↩️ Zurück</button>
-        <button class="delete" @click="deleteMovie(m.id)">❌</button>
+      <div
+        v-for="movie in rewatch"
+        :key="movie.id"
+        class="card"
+        @click="moveMovie(movie)"
+      >
+        <img :src="movie.image" />
+        <p>{{ movie.name }}</p>
       </div>
     </div>
-  </div>
 
-  <!-- REWATCH -->
-  <h2>🔄 Rewatch</h2>
-  <div class="games">
-    <div v-for="m in rewatch" :key="m.id" class="card">
-      <img v-if="m.image" :src="m.image" />
-      <h3>{{ m.name }}</h3>
-
-      <div class="buttons">
-        <button class="watched" @click="updateStatus(m, 'watched')">✅ Gesehen</button>
-        <button class="back" @click="updateStatus(m, 'watchlist')">↩️ Zurück</button>
-        <button class="delete" @click="deleteMovie(m.id)">❌</button>
-      </div>
-    </div>
   </div>
 </template>
 
-<style>
-body {
-  font-family: Arial, sans-serif;
-  background:
-    linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
-    url('/maxresdefault.jpg') center/cover no-repeat fixed;
-  color: #f1f5f9;
-  margin: 0;
-  padding: 20px;
-}
-
-h2 {
-  text-align: center;
-  margin: 15px 0;
-}
-
-/* SEARCH */
-.search-wrapper {
-  position: relative;
-  width: 500px;
-  margin: 0 auto 30px;
-}
-
-.search-wrapper input {
-  width: 100%;
-  padding: 14px;
-  border-radius: 10px;
-  border: none;
-  background: #1e293b;
-  color: white;
-}
-
-/* DROPDOWN */
-.dropdown {
-  position: absolute;
-  top: 110%;
-  width: 100%;
-  background: #1e293b;
-  border-radius: 10px;
-  max-height: 260px;
-  overflow-y: auto;
-  z-index: 10;
-}
-
-.dropdown-item {
+<style scoped>
+.board {
   display: flex;
-  gap: 10px;
-  padding: 10px;
-  cursor: pointer;
-}
-
-.dropdown-item:hover {
-  background: #334155;
-}
-
-.dropdown-item img {
-  width: 45px;
-  height: 45px;
-  border-radius: 6px;
-  object-fit: cover;
-}
-
-/* GRID */
-.games {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 20px;
+  align-items: flex-start;
 }
 
-/* CARD */
-.card {
-  background: #1e293b;
-  padding: 12px;
+.column {
+  flex: 1;
+  background: #f7f7f7;
+  padding: 10px;
   border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  min-height: 300px;
 }
 
-.card img {
+.card {
+  background: white;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.card:hover {
+  transform: scale(1.03);
+}
+
+img {
   width: 100%;
-  height: 180px;
-  object-fit: cover;
   border-radius: 8px;
 }
-
-/* BUTTONS */
-.buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-button {
-  flex: 1;
-  padding: 8px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  color: white;
-  font-size: 13px;
-}
-
-.watched { background: #22c55e; }
-.rewatch { background: #3b82f6; }
-.back { background: #f59e0b; }
-.delete { background: #ef4444; }
 </style>
