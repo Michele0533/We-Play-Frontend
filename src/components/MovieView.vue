@@ -39,19 +39,13 @@ const searchMovies = async () => {
 }
 
 
-// 📥 LOAD (SAFE + NO CRASH)
+// 📥 LOAD + SORT (SAFE)
 const loadMovies = async () => {
   try {
     const res = await fetch(`${API}/api/movies`)
-
-    if (!res.ok) {
-      console.error("API ERROR:", res.status)
-      return
-    }
-
     const data = await res.json()
 
-    console.log("BACKEND DATA:", data)
+    console.log("BACKEND:", data)
 
     watchlist.value = []
     watched.value = []
@@ -59,13 +53,13 @@ const loadMovies = async () => {
 
     if (!Array.isArray(data)) return
 
-    for (const m of data) {
+    data.forEach(m => {
       const status = (m?.status || 'watchlist').toLowerCase()
 
       if (status === 'watched') watched.value.push(m)
       else if (status === 'rewatch') rewatch.value.push(m)
       else watchlist.value.push(m)
-    }
+    })
 
   } catch (err) {
     console.error("LOAD ERROR:", err)
@@ -98,7 +92,7 @@ const addMovie = async (movie) => {
 }
 
 
-// 🔁 MOVE (WICHTIG)
+// 🔁 MOVE MOVIE (SAFE PATCH)
 const moveMovie = async (movie, status) => {
   try {
     await fetch(`${API}/api/movies/${movie.id}`, {
@@ -107,6 +101,7 @@ const moveMovie = async (movie, status) => {
       body: JSON.stringify({ status })
     })
 
+    movie.status = status
     loadMovies()
 
   } catch (err) {
@@ -130,7 +125,7 @@ const deleteMovie = async (id) => {
 }
 
 
-// RESET SEARCH
+// 🔍 RESET
 const resetSearch = () => {
   search.value = ''
   movies.value = []
