@@ -1,81 +1,138 @@
-import express from "express";
-import cors from "cors";
-import mongoose from "mongoose";
-import dotenv from "dotenv";
+<script setup>
+import { ref, onMounted, computed } from "vue";
 
-dotenv.config();
-
-const app = express();
-app.use(cors());
-app.use(express.json());
+const movies = ref([]);
 
 /* =========================
-   DB CONNECT
+   LOAD DATA
 ========================= */
-mongoose.connect(process.env.MONGO_URL)
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch(err => console.log("❌ MongoDB error:", err));
+async function loadMovies() {
+  const res = await fetch("http://localhost:3000/api/movies");
+  movies.value = await res.json();
+}
+
+onMounted(loadMovies);
 
 /* =========================
-   MOVIE MODEL
+   MOVE CARD (NO BUTTONS)
 ========================= */
-const movieSchema = new mongoose.Schema({
-  id: Number,
-  name: String,
-  image: String,
-  status: {
-    type: String,
-    enum: ["watchlist", "seen", "rewatch"],
-    default: "watchlist"
-  }
-});
+function moveMovie(movie) {
+  const order = ["watchlist", "seen", "rewatch"];
 
-const Movie = mongoose.model("Movie", movieSchema);
+  const current = movie.status || "watchlist";
+  const next = order[(order.indexOf(current) + 1) % order.length];
+
+  movie.status = next;
+
+  fetch(`http://localhost:3000/api/movies/${movie.id}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status: next })
+  });
+}
 
 /* =========================
-   ROUTES
+   COLUMNS
 ========================= */
+const watchlist = computed(() =>
+  movies.value.filter(m => (m.status || "watchlist") === "watchlist")
+);
 
-// GET ALL
-app.get("/api/movies", async (req, res) => {
-  const movies = await Movie.find();
-  res.json(movies);
-});
+const seen = computed(() =>
+  movies.value.filter(m => m.status === "seen")
+);
 
-// CREATE
-app.post("/api/movies", async (req, res) => {
-  const movie = new Movie(req.body);
-  await movie.save();
-  res.json(movie);
-});
+const rewatch = computed(() =>
+  movies.value.filter(m => m.status === "rewatch")
+);
+</script>
 
-// DELETE
-app.delete("/api/movies/:id", async (req, res) => {
-  await Movie.deleteOne({ id: req.params.id });
-  res.json({ message: "deleted" });
-});
+<template>
+  <div class="board">
 
-// UPDATE STATUS
-app.patch("/api/movies/:id/status", async (req, res) => {
-  const { status } = req.body;
+    <!-- WATCHLIST -->
+    <div class="column">
+      <h2>📌 Watchlist</h2>
 
-  const allowed = ["watchlist", "seen", "rewatch"];
-  if (!allowed.includes(status)) {
-    return res.status(400).json({ error: "invalid status" });
-  }
+      <div
+        v-for="movie in watchlist"
+        :key="movie.id"
+        class="card"
+        @click="moveMovie(movie)"
+      >
+        <img :src="movie.image" />
+        <p>{{ movie.name }}</p>
+      </div>
+    </div>
 
-  const updated = await Movie.findOneAndUpdate(
-    { id: req.params.id },
-    { status },
-    { new: true }
-  );
+    <!-- SEEN -->
+    <div class="column">
+      <h2>✅ Seen</h2>
 
-  res.json(updated);
-});
+      <div
+        v-for="movie in seen"
+        :key="movie.id"
+        class="card"
+        @click="moveMovie(movie)"
+      >
+        <img :src="movie.image" />
+        <p>{{ movie.name }}</p>
+      </div>
+    </div>
 
-/* =========================
-   SERVER
-========================= */
-app.listen(3000, () => {
-  console.log("🚀 Server läuft auf Port 3000");
-});
+    <!-- REWATCH -->
+    <div class="column">
+      <h2>🔁 Rewatch</h2>
+
+      <div
+        v-for="movie in rewatch"
+        :key="movie.id"
+        class="card"
+        @click="moveMovie(movie)"
+      >
+        <img :src="movie.image" />
+        <p>{{ movie.name }}</p>
+      </div>
+    </div>
+
+  </div>
+</template>
+
+<style scoped>
+.board {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+}
+
+.column {
+  flex: 1;
+  background: #f2f2f2;
+  border-radius: 12px;
+  padding: 10px;
+  min-height: 400px;
+}
+
+.card {
+  background: white;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  padding: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.card:hover {
+  transform: scale(1.03);
+}
+
+img {
+  width: 100%;
+  border-radius: 8px;
+}
+
+p {
+  text-align: center;
+  font-weight: bold;
+}
+</style>
