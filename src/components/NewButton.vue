@@ -108,7 +108,7 @@ function resetGame() {
 
 <!-- 💖 FLOATING BUTTON -->
 <button class="head" @click="showGame = true">
-  Genshin-Quiz for baby
+  ❓
 </button>
 
 <!-- 🌑 FULLSCREEN OVERLAY -->
