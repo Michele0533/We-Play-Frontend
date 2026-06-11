@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import GameView from './components/GameView.vue'
 import MovieView from './components/MovieView.vue'
 import LoveMessage from './components/LoveMessage.vue'
+import NewButton from ./components/NewButton.vue'
 
 const page = ref('games')
 </script>
