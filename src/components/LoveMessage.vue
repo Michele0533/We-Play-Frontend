@@ -71,6 +71,7 @@ function redeem() {
 </template>
 
 <style scoped>
+
 /* BUTTON */
 .love-button{
   position:fixed;
@@ -83,16 +84,26 @@ function redeem() {
   color:white;
   font-weight:bold;
   cursor:pointer;
+  z-index: 9999;
 }
 
-/* OVERLAY */
+/* OVERLAY (🔥 FIXED FULLSCREEN) */
 .overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.65);
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh; /* 🔥 FIX für mobile Browser-Leiste */
+
+  background: rgba(0,0,0,0.65);
+
   display:flex;
   justify-content:center;
   align-items:center;
+
+  z-index: 99999;
 }
 
 /* CARD */
@@ -171,5 +182,15 @@ function redeem() {
 .used{
   text-align:center;
   font-weight:bold;
+}
+
+/* 🔥 GLOBAL FULLSCREEN FIX */
+:global(html),
+:global(body){
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overscroll-behavior: none;
 }
 </style>
