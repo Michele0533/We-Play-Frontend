@@ -17,11 +17,6 @@ const showConfetti = ref(false)
 const finished = ref(false)
 
 /* =========================
-   FLOATING HEAD BUTTON
-========================= */
-const showHead = ref(true)
-
-/* =========================
    SAVE SYSTEM
 ========================= */
 onMounted(() => {
@@ -84,8 +79,6 @@ function triggerConfetti() {
    CHECK ANSWER
 ========================= */
 function submit() {
-  if (!current.value) return
-
   const ans = input.value.toLowerCase().trim()
 
   if (ans === current.value.answer) {
@@ -123,7 +116,7 @@ function nextLevel() {
       finished.value = true
       triggerConfetti()
     }
-  }, 500)
+  }, 400)
 }
 
 /* =========================
@@ -140,10 +133,10 @@ function resetGame() {
 
 <template>
 
-<!-- 💕 FLOATING HEAD -->
-<div v-if="showHead" class="head" @click="showGame = true">
+<!-- 💖 FLOATING BUTTON (FIXED) -->
+<button class="head" @click="showGame = true">
   💖
-</div>
+</button>
 
 <!-- GAME -->
 <div v-if="showGame" class="overlay">
@@ -195,21 +188,30 @@ function resetGame() {
 
 <style scoped>
 
-/* FLOATING HEAD */
+/* 💖 FLOATING BUTTON FIX */
 .head{
-  position:fixed;
-  bottom:20px;
-  right:20px;
-  width:55px;
-  height:55px;
-  background:#ff4fa3;
-  border-radius:50%;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:24px;
-  cursor:pointer;
-  box-shadow:0 5px 15px rgba(0,0,0,0.3);
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+
+  width: 60px;
+  height: 60px;
+
+  background: #ff4fa3;
+  border-radius: 50%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 26px;
+  cursor: pointer;
+
+  border: none;
+
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+
+  z-index: 9999; /* 🔥 IMPORTANT */
 }
 
 /* OVERLAY */
