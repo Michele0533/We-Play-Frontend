@@ -18,6 +18,9 @@ const page = ref('games')
 
   <LoveMessage />
 
+  <!-- 🔥 HIER IST DER FIX -->
+  <NewButton />
+
   <GameView v-if="page === 'games'" />
   <MovieView v-if="page === 'movies'" />
 </template>
