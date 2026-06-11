@@ -33,16 +33,16 @@ const levels = [
   {
     question: "An welches Gebiet denke ich?",
     answer: "sumeru",
-    tips: ["🌿 Dendro Nation", "📚 Akademiya", "🌳 Wald + Wüste", "👑 Weisheit", "👧 Nahida"]
+    tips: ["🌿 Dendro ", "Wald ", "Wüste", "👑 Weisheit", "👧 Nahida"]
   },
   {
     question: "Emoji Charakter?",
     answer: "linnea",
-    tips: ["🎮", "🎮🌿", "🎮🌿❄️", "🎮🌿❄️🕊️", "🎮🌿❄️🕊️🌸"]
+    tips: ["🪨", "🪨🏹", "🪨🏹💚", "🪨🏹💚💥", "🪨🏹💚💥⛏️"]
   },
   {
     question: "Letzte Frage ❤️",
-    answer: "du",
+    answer: "Honey",
     tips: ["💖 wichtig", "💖 immer da", "💖 Lieblingsperson", "💖 Herz", "💖 du"]
   }
 ]
