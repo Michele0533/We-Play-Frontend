@@ -1,40 +1,21 @@
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 /* =========================
    STATE
 ========================= */
 const showGame = ref(false)
-
 const level = ref(0)
 const input = ref('')
 const tries = ref(0)
-const totalErrors = ref(0)
-
 const feedback = ref('')
 const animateFeedback = ref(false)
-
 const showConfetti = ref(false)
 const finished = ref(false)
 
 /* =========================
-   SAVE SYSTEM
+   BODY LOCK (FULLSCREEN FIX)
 ========================= */
-onMounted(() => {
-  const save = JSON.parse(localStorage.getItem("loveGameSave"))
-  if (save) {
-    level.value = save.level
-    totalErrors.value = save.totalErrors
-  }
-})
-
-watch([level, totalErrors], () => {
-  localStorage.setItem("loveGameSave", JSON.stringify({
-    level: level.value,
-    totalErrors: totalErrors.value
-  }))
-})
-
 watch(showGame, (val) => {
   document.body.style.overflow = val ? 'hidden' : ''
   document.documentElement.style.overflow = val ? 'hidden' : ''
@@ -52,7 +33,7 @@ const levels = [
   {
     question: "An welches Gebiet denke ich?",
     answer: "sumeru",
-    tips: ["🌿 Dendro Nation", "📚 Akademiya", "🌳 Regenwald + Wüste", "👑 Weisheit", "👧 Nahida"]
+    tips: ["🌿 Dendro Nation", "📚 Akademiya", "🌳 Wald + Wüste", "👑 Weisheit", "👧 Nahida"]
   },
   {
     question: "Emoji Charakter?",
@@ -69,15 +50,7 @@ const levels = [
 const current = computed(() => levels[level.value] || null)
 
 /* =========================
-   CONFETTI
-========================= */
-function triggerConfetti() {
-  showConfetti.value = true
-  setTimeout(() => showConfetti.value = false, 1500)
-}
-
-/* =========================
-   CHECK ANSWER
+   GAME LOGIC
 ========================= */
 function submit() {
   if (!current.value) return
@@ -90,15 +63,13 @@ function submit() {
     return
   }
 
-  totalErrors.value++
   tries.value++
-
   animateFeedback.value = true
   setTimeout(() => animateFeedback.value = false, 300)
 
   if (tries.value >= 5) {
     feedback.value = `❌ Lösung: ${current.value.answer}`
-    nextLevel(true)
+    nextLevel()
     return
   }
 
@@ -117,7 +88,8 @@ function nextLevel() {
 
     if (level.value >= levels.length) {
       finished.value = true
-      triggerConfetti()
+      showConfetti.value = true
+      setTimeout(() => showConfetti.value = false, 1500)
     }
   }, 400)
 }
@@ -128,23 +100,21 @@ function nextLevel() {
 function resetGame() {
   level.value = 0
   tries.value = 0
-  totalErrors.value = 0
   finished.value = false
-  localStorage.removeItem("loveGameSave")
 }
 </script>
 
 <template>
 
-<!-- 💖 BUTTON LINKS UNTEN -->
+<!-- 💖 FLOATING BUTTON -->
 <button class="head" @click="showGame = true">
   💖
 </button>
 
-<!-- GAME -->
+<!-- 🌑 FULLSCREEN OVERLAY -->
 <div v-if="showGame" class="overlay">
 
-  <!-- CONFETTI -->
+  <!-- 🎉 CONFETTI -->
   <div v-if="showConfetti" class="confetti">
     🎉💖🎉💖🎉
   </div>
@@ -159,9 +129,7 @@ function resetGame() {
 
       <input v-model="input" @keyup.enter="submit" />
 
-      <button class="btn" @click="submit">
-        OK
-      </button>
+      <button class="btn" @click="submit">OK</button>
 
       <p class="feedback" :class="{ shake: animateFeedback }">
         {{ feedback }}
@@ -173,10 +141,7 @@ function resetGame() {
 
     <div v-else class="done">
       💖 GAME COMPLETE 💖
-
-      <p v-if="totalErrors <= 3">🏆 Secret Ending</p>
-      <p v-else>💞 Gut gemacht</p>
-
+      <br><br>
       <button @click="resetGame">Neu starten</button>
     </div>
 
@@ -191,7 +156,7 @@ function resetGame() {
 
 <style scoped>
 
-/* 💖 BUTTON LINKS UNTEN */
+/* 💖 BUTTON */
 .head{
   position: fixed;
   bottom: 20px;
@@ -202,6 +167,7 @@ function resetGame() {
 
   background: #ff4fa3;
   border-radius: 50%;
+  border: none;
 
   display: flex;
   justify-content: center;
@@ -210,77 +176,84 @@ function resetGame() {
   font-size: 26px;
   cursor: pointer;
 
-  border: none;
-
   box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 
-  z-index: 9999;
+  z-index: 999999;
 }
 
-/* OVERLAY */
+/* 🌑 FULLSCREEN OVERLAY FIX */
 .overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.7);
-  display:flex;
-  justify-content:center;
-  align-items:center;
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+
+  background: rgba(0,0,0,0.75);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 999999;
 }
 
-/* CARD */
+/* 📱 CARD */
 .card{
-  width:340px;
-  background:#1f1f1f;
-  color:white;
-  padding:20px;
-  border-radius:18px;
-  text-align:center;
+  width: 340px;
+  background: #1f1f1f;
+  color: white;
+  padding: 20px;
+  border-radius: 18px;
+  text-align: center;
 }
 
 /* INPUT */
 input{
-  width:100%;
-  padding:10px;
-  border-radius:10px;
-  border:none;
-  margin-top:10px;
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  margin-top: 10px;
 }
 
 /* BUTTON */
 .btn{
-  width:100%;
-  margin-top:10px;
-  background:#ff4fa3;
-  border:none;
-  padding:10px;
-  color:white;
-  border-radius:10px;
+  width: 100%;
+  margin-top: 10px;
+  background: #ff4fa3;
+  border: none;
+  padding: 10px;
+  color: white;
+  border-radius: 10px;
 }
 
 /* FEEDBACK */
 .feedback{
-  min-height:20px;
-  color:#ffcc00;
+  min-height: 20px;
+  color: #ffcc00;
 }
 
 /* TRIES */
 .tries{
-  font-size:12px;
-  opacity:0.6;
+  font-size: 12px;
+  opacity: 0.6;
 }
 
-/* DONE */
-.done{
-  font-size:18px;
-  margin:20px 0;
+/* CLOSE */
+.close{
+  margin-top: 10px;
+  background: transparent;
+  border: 1px solid white;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 8px;
 }
 
 /* CONFETTI */
 .confetti{
-  position:absolute;
-  top:20%;
-  font-size:30px;
-  animation: pop 1s ease;
+  position: absolute;
+  top: 20%;
+  font-size: 30px;
 }
 
 /* SHAKE */
@@ -288,17 +261,11 @@ input{
   animation: shake 0.3s;
 }
 
-/* ANIMATIONS */
 @keyframes shake{
   0%,100%{transform:translateX(0)}
   25%{transform:translateX(-5px)}
   50%{transform:translateX(5px)}
   75%{transform:translateX(-3px)}
-}
-
-@keyframes pop{
-  from{transform:scale(0.5);opacity:0}
-  to{transform:scale(1);opacity:1}
 }
 
 </style>
