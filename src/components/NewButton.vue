@@ -5,6 +5,7 @@ import { ref, computed, watch, onMounted } from 'vue'
    STATE
 ========================= */
 const showGame = ref(false)
+
 const level = ref(0)
 const input = ref('')
 const tries = ref(0)
@@ -51,7 +52,7 @@ const levels = [
   {
     question: "An welches Gebiet denke ich?",
     answer: "sumeru",
-    tips: ["🌿 Dendro Nation", "📚 Akademiya", "🌳 Wüste + Wald", "👑 Weisheit", "👧 Nahida"]
+    tips: ["🌿 Dendro Nation", "📚 Akademiya", "🌳 Regenwald + Wüste", "👑 Weisheit", "👧 Nahida"]
   },
   {
     question: "Emoji Charakter?",
@@ -79,6 +80,8 @@ function triggerConfetti() {
    CHECK ANSWER
 ========================= */
 function submit() {
+  if (!current.value) return
+
   const ans = input.value.toLowerCase().trim()
 
   if (ans === current.value.answer) {
@@ -133,7 +136,7 @@ function resetGame() {
 
 <template>
 
-<!-- 💖 FLOATING BUTTON (FIXED) -->
+<!-- 💖 BUTTON LINKS UNTEN -->
 <button class="head" @click="showGame = true">
   💖
 </button>
@@ -188,11 +191,11 @@ function resetGame() {
 
 <style scoped>
 
-/* 💖 FLOATING BUTTON FIX */
+/* 💖 BUTTON LINKS UNTEN */
 .head{
   position: fixed;
   bottom: 20px;
-  right: 20px;
+  left: 20px;
 
   width: 60px;
   height: 60px;
@@ -211,7 +214,7 @@ function resetGame() {
 
   box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 
-  z-index: 9999; /* 🔥 IMPORTANT */
+  z-index: 9999;
 }
 
 /* OVERLAY */
