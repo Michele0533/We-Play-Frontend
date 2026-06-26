@@ -12,7 +12,7 @@
 Hallo Honey oder sollte ich dich meine künftige ehefrau nennen?
          Du bist für mich das was ich je gesucht habe bzw ich habe danach nie gesucht und dennoch bist du hier , ich wusste icht dass ich so jamden brauche wie dich! alles harmoniert , ist entspannt, kein druck.
          das hat mir das wochenende gezeigt, klar gab es momente wo mal ich oder du es etwas ungewohnt gesehen hat.
-         Aber alleine das spazieren mit ava, das kuscheln, das shoppen, deine familie.
+         Aber alleine das spazieren mit ava, das kuscheln, das shoppen,das lego bauen,unser inneren kinder rauslassen, scheißelabern, deine familie.
          Zusammen essen und serie schauen.
          das alles hat mein herz daran erinnert dass nach der ganzen shit zeit nun ein engel gespawnt ist und mich beschützt.
          und ja ich sage das oft hase und ich sehe das , dein herz öffnet sich langsam aber sicher und das macht mich zum glücklicshten mann der welt.
