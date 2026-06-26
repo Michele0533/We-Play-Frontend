@@ -18,6 +18,9 @@ Hallo Honey oder sollte ich dich meine künftige ehefrau nennen?
          und ja ich sage das oft hase und ich sehe das , dein herz öffnet sich langsam aber sicher und das macht mich zum glücklicshten mann der welt.
          Wie deine traumfrau liebt dich zurück das ist nach allem wirklich das beste was passieren konnte.
          und dein chatakter erst mein schatz! fangen wir nicht damit an wie obsesed ich mit dir bin hase. ICH LIEB DEINE CHATKTER,DEINEN KÖRPER UND ALLES WAS DU FÜR MICH TUST!! <3
+           vergiss deinen gutschein nicht.
+
+           -DEIN HONEY 
       </div>
 
       <button class="close" @click="showGame = false">
@@ -80,7 +83,7 @@ watch(showGame, (val) => {
 
 .text{
   white-space: pre-wrap;
-  line-height: 1.8;
+  line-height: 2.5;
 }
 
 .close{
