@@ -1,271 +1,96 @@
+<template>
+  <!-- 💖 FLOATING BUTTON -->
+  <button class="head" @click="showGame = true">
+    ❓
+  </button>
+
+  <!-- 🌑 OVERLAY -->
+  <div v-if="showGame" class="overlay">
+    <div class="card">
+
+      <div class="text">
+Hallo Honey oder sollte ich dich meine künftige ehefrau nennen?
+         Du bist für mich das was ich je gesucht habe bzw ich habe danach nie gesucht und dennoch bist du hier , ich wusste icht dass ich so jamden brauche wie dich! alles harmoniert , ist entspannt, kein druck.
+         das hat mir das wochenende gezeigt, klar gab es momente wo mal ich oder du es etwas ungewohnt gesehen hat.
+         Aber alleine das spazieren mit ava, das kuscheln, das shoppen, deine familie.
+         Zusammen essen und serie schauen.
+         das alles hat mein herz daran erinnert dass nach der ganzen shit zeit nun ein engel gespawnt ist und mich beschützt.
+         und ja ich sage das oft hase und ich sehe das , dein herz öffnet sich langsam aber sicher und das macht mich zum glücklicshten mann der welt.
+         Wie deine traumfrau liebt dich zurück das ist nach allem wirklich das beste was passieren konnte.
+         und dein chatakter erst mein schatz! fangen wir nicht damit an wie obsesed ich mit dir bin hase. ICH LIEB DEINE CHATKTER,DEINEN KÖRPER UND ALLES WAS DU FÜR MICH TUST!! <3
+      </div>
+
+      <button class="close" @click="showGame = false">
+        Schließen
+      </button>
+
+    </div>
+  </div>
+</template>
+
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, watch } from 'vue'
 
-/* =========================
-   STATE
-========================= */
 const showGame = ref(false)
-const level = ref(0)
-const input = ref('')
-const tries = ref(0)
-const feedback = ref('')
-const animateFeedback = ref(false)
-const showConfetti = ref(false)
-const finished = ref(false)
 
-/* =========================
-   BODY LOCK (FULLSCREEN FIX)
-========================= */
 watch(showGame, (val) => {
   document.body.style.overflow = val ? 'hidden' : ''
   document.documentElement.style.overflow = val ? 'hidden' : ''
 })
-
-/* =========================
-   LEVELS
-========================= */
-const levels = [
-  {
-    question: "An welchen Genshin Charakter denke ich?",
-    answer: "xianyun",
-    tips: ["🗡️ Catalyst", "🌪️ Anemo", "📜 4.4 Patch", "🏔️ Liyue", "☁️ Cloud Retainer"]
-  },
-  {
-    question: "An welches Gebiet denke ich?",
-    answer: "sumeru",
-    tips: ["🌿 Dendro ", "Wald ", "Wüste", "👑 Weisheit", "👧 Nahida"]
-  },
-  {
-    question: "Emoji Charakter?",
-    answer: "linnea",
-    tips: ["🪨", "🪨🏹", "🪨🏹💚", "🪨🏹💚💥", "🪨🏹💚💥⛏️"]
-  },
-  {
-    question: "Letzte Frage ❤️",
-    answer: "Honey",
-    tips: ["💖 wichtig", "💖 immer da", "💖 Lieblingsperson", "💖 Herz", "💖 du"]
-  }
-]
-
-const current = computed(() => levels[level.value] || null)
-
-/* =========================
-   GAME LOGIC
-========================= */
-function submit() {
-  if (!current.value) return
-
-  const ans = input.value.toLowerCase().trim()
-
-  if (ans === current.value.answer) {
-    feedback.value = "✅ Richtig!"
-    nextLevel()
-    return
-  }
-
-  tries.value++
-  animateFeedback.value = true
-  setTimeout(() => animateFeedback.value = false, 300)
-
-  if (tries.value >= 5) {
-    feedback.value = `❌ Lösung: ${current.value.answer}`
-    nextLevel()
-    return
-  }
-
-  feedback.value = current.value.tips[tries.value - 1]
-}
-
-/* =========================
-   NEXT LEVEL
-========================= */
-function nextLevel() {
-  setTimeout(() => {
-    level.value++
-    input.value = ''
-    tries.value = 0
-    feedback.value = ''
-
-    if (level.value >= levels.length) {
-      finished.value = true
-      showConfetti.value = true
-      setTimeout(() => showConfetti.value = false, 1500)
-    }
-  }, 400)
-}
-
-/* =========================
-   RESET
-========================= */
-function resetGame() {
-  level.value = 0
-  tries.value = 0
-  finished.value = false
-}
 </script>
 
-<template>
-
-<!-- 💖 FLOATING BUTTON -->
-<button class="head" @click="showGame = true">
-  ❓
-</button>
-
-<!-- 🌑 FULLSCREEN OVERLAY -->
-<div v-if="showGame" class="overlay">
-
-  <!-- 🎉 CONFETTI -->
-  <div v-if="showConfetti" class="confetti">
-    🎉💖🎉💖🎉
-  </div>
-
-  <div class="card">
-
-    <h2 v-if="!finished">Level {{ level + 1 }}/4</h2>
-
-    <div v-if="!finished">
-
-      <p class="question">{{ current.question }}</p>
-
-      <input v-model="input" @keyup.enter="submit" />
-
-      <button class="btn" @click="submit">OK</button>
-
-      <p class="feedback" :class="{ shake: animateFeedback }">
-        {{ feedback }}
-      </p>
-
-      <p class="tries">Versuche: {{ tries }}/5</p>
-
-    </div>
-
-    <div v-else class="done">
-      💖 GAME COMPLETE 💖
-      <br><br>
-      <button @click="resetGame">Neu starten</button>
-    </div>
-
-    <button class="close" @click="showGame = false">
-      Schließen
-    </button>
-
-  </div>
-</div>
-
-</template>
-
 <style scoped>
-
-/* 💖 BUTTON */
 .head{
   position: fixed;
   bottom: 20px;
   left: 20px;
-
   width: 60px;
   height: 60px;
-
-  background: #ff4fa3;
-  border-radius: 50%;
   border: none;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
+  border-radius: 50%;
+  background: #ff4fa3;
+  color: white;
   font-size: 26px;
   cursor: pointer;
-
-  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-
   z-index: 999999;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 }
 
-/* 🌑 FULLSCREEN OVERLAY FIX */
 .overlay{
   position: fixed;
   inset: 0;
   width: 100vw;
   height: 100vh;
-
   background: rgba(0,0,0,0.75);
-
   display: flex;
   justify-content: center;
   align-items: center;
-
   z-index: 999999;
 }
 
-/* 📱 CARD */
 .card{
-  width: 340px;
+  width: min(700px, 90%);
+  max-height: 80vh;
+  overflow-y: auto;
   background: #1f1f1f;
   color: white;
-  padding: 20px;
+  padding: 25px;
   border-radius: 18px;
-  text-align: center;
 }
 
-/* INPUT */
-input{
-  width: 100%;
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-  margin-top: 10px;
+.text{
+  white-space: pre-wrap;
+  line-height: 1.8;
 }
 
-/* BUTTON */
-.btn{
+.close{
+  margin-top: 20px;
   width: 100%;
-  margin-top: 10px;
   background: #ff4fa3;
   border: none;
   padding: 10px;
   color: white;
   border-radius: 10px;
+  cursor: pointer;
 }
-
-/* FEEDBACK */
-.feedback{
-  min-height: 20px;
-  color: #ffcc00;
-}
-
-/* TRIES */
-.tries{
-  font-size: 12px;
-  opacity: 0.6;
-}
-
-/* CLOSE */
-.close{
-  margin-top: 10px;
-  background: transparent;
-  border: 1px solid white;
-  color: white;
-  padding: 6px 10px;
-  border-radius: 8px;
-}
-
-/* CONFETTI */
-.confetti{
-  position: absolute;
-  top: 20%;
-  font-size: 30px;
-}
-
-/* SHAKE */
-.shake{
-  animation: shake 0.3s;
-}
-
-@keyframes shake{
-  0%,100%{transform:translateX(0)}
-  25%{transform:translateX(-5px)}
-  50%{transform:translateX(5px)}
-  75%{transform:translateX(-3px)}
-}
-
 </style>
