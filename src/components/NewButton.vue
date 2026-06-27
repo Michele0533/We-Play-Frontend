@@ -6,6 +6,12 @@
 
   <!-- 🌑 OVERLAY -->
   <div v-if="showGame" class="overlay">
+
+    <!-- 🎉 CONFETTI -->
+    <div v-if="showConfetti" class="confetti">
+      🎉 💖 🎉 💖 🎉 💖 🎉 💖 🎉 💖 🎉
+    </div>
+
     <div class="card">
 
       <!-- LEVELS -->
@@ -29,9 +35,9 @@
         <p class="feedback">{{ feedback }}</p>
       </div>
 
-      <!-- HIER KOMMT SPÄTER DEIN TEXT REIN -->
+      <!-- DONE -->
       <div v-else class="text">
-        <!-- Hier deinen Brief einfügen -->
+        <!-- DEIN TEXT HIER -->
       </div>
 
       <button class="close" @click="showGame = false">
@@ -46,10 +52,12 @@
 import { ref, watch } from "vue";
 
 const showGame = ref(false);
+
 const level = ref(0);
 const input = ref("");
 const feedback = ref("");
 const finished = ref(false);
+const showConfetti = ref(false);
 
 const levels = [
   {
@@ -92,8 +100,15 @@ function submit() {
 
       if (level.value >= levels.length) {
         finished.value = true;
+
+        // 🎉 CONFETTI START
+        showConfetti.value = true;
+
+        setTimeout(() => {
+          showConfetti.value = false;
+        }, 4000);
       }
-    }, 700);
+    }, 600);
   } else {
     feedback.value = "❌ Leider falsch. Versuch es nochmal.";
   }
@@ -137,12 +152,12 @@ function submit() {
   color: white;
   padding: 25px;
   border-radius: 18px;
+  position: relative;
 }
 
 .question {
   margin: 20px 0;
   line-height: 1.6;
-  font-size: 18px;
 }
 
 input {
@@ -152,25 +167,22 @@ input {
   border-radius: 10px;
   margin-top: 10px;
   margin-bottom: 10px;
-  box-sizing: border-box;
 }
 
 .btn {
   width: 100%;
   padding: 10px;
-  background: #ff4fa3;
   border: none;
-  color: white;
   border-radius: 10px;
+  background: #ff4fa3;
+  color: white;
   cursor: pointer;
-  font-size: 16px;
 }
 
 .feedback {
-  margin-top: 15px;
-  min-height: 24px;
+  margin-top: 10px;
+  min-height: 20px;
   font-weight: bold;
-  color: #ffd54f;
 }
 
 .text {
@@ -181,11 +193,37 @@ input {
 .close {
   margin-top: 20px;
   width: 100%;
-  background: transparent;
-  border: 1px solid white;
-  color: white;
   padding: 10px;
+  border: none;
   border-radius: 10px;
+  background: #444;
+  color: white;
   cursor: pointer;
+}
+
+/* 🎉 CONFETTI */
+.confetti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999999;
+
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+
+  font-size: 30px;
+  animation: fall 4s linear forwards;
+}
+
+@keyframes fall {
+  0% {
+    transform: translateY(-20vh);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(120vh);
+    opacity: 0;
+  }
 }
 </style>
