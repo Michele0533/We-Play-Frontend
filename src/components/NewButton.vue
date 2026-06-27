@@ -1,5 +1,5 @@
 <template>
-  <!-- 💖 FLOATING BUTTON -->
+  <!-- 💖 BUTTON -->
   <button class="head" @click="showGame = true">
     ❓
   </button>
@@ -8,19 +8,30 @@
   <div v-if="showGame" class="overlay">
     <div class="card">
 
-      <div class="text">
-Hallo Honey oder sollte ich dich meine künftige ehefrau nennen?
-         Du bist für mich das was ich je gesucht habe bzw ich habe danach nie gesucht und dennoch bist du hier , ich wusste icht dass ich so jamden brauche wie dich! alles harmoniert , ist entspannt, kein druck.
-         das hat mir das wochenende gezeigt, klar gab es momente wo mal ich oder du es etwas ungewohnt gesehen hat.
-         Aber alleine das spazieren mit ava, das kuscheln, das shoppen,das lego bauen,unser inneren kinder rauslassen, scheißelabern, deine familie.
-         Zusammen essen und serie schauen.
-         das alles hat mein herz daran erinnert dass nach der ganzen shit zeit nun ein engel gespawnt ist und mich beschützt.
-         und ja ich sage das oft hase und ich sehe das , dein herz öffnet sich langsam aber sicher und das macht mich zum glücklicshten mann der welt.
-         Wie deine traumfrau liebt dich zurück das ist nach allem wirklich das beste was passieren konnte.
-         und dein chatakter erst mein schatz! fangen wir nicht damit an wie obsesed ich mit dir bin hase. ICH LIEB DEINE CHATKTER,DEINEN KÖRPER UND ALLES WAS DU FÜR MICH TUST!! <3
-           vergiss deinen gutschein nicht.
+      <!-- LEVELS -->
+      <div v-if="!finished">
+        <h2>Level {{ level + 1 }}/{{ levels.length }}</h2>
 
-           -DEIN HONEY 
+        <p class="question">
+          {{ levels[level].question }}
+        </p>
+
+        <input
+          v-model="input"
+          @keyup.enter="submit"
+          placeholder="Antwort eingeben..."
+        />
+
+        <button class="btn" @click="submit">
+          Bestätigen
+        </button>
+
+        <p class="feedback">{{ feedback }}</p>
+      </div>
+
+      <!-- HIER KOMMT SPÄTER DEIN TEXT REIN -->
+      <div v-else class="text">
+        <!-- Hier deinen Brief einfügen -->
       </div>
 
       <button class="close" @click="showGame = false">
@@ -32,18 +43,65 @@ Hallo Honey oder sollte ich dich meine künftige ehefrau nennen?
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch } from "vue";
 
-const showGame = ref(false)
+const showGame = ref(false);
+const level = ref(0);
+const input = ref("");
+const feedback = ref("");
+const finished = ref(false);
+
+const levels = [
+  {
+    question:
+      "1. Mich findet man auf hoher See und es gibt mehrere von mir, um ins Schloss zu gelangen. Wer bin ich?",
+    answer: "triforce",
+  },
+  {
+    question:
+      "2. Ich bin ein treuer Begleiter vom Traveler und erkunde Teyvat. Wer bin ich?",
+    answer: "paimon",
+  },
+  {
+    question:
+      "3. Mich kann man fühlen, aber weder sehen noch anfassen. Was bin ich?",
+    answer: "liebe",
+  },
+  {
+    question:
+      "4. Ich bin teurer als jeder Lambo. Wer bin ich? (Hint: Genshin Charakter)",
+    answer: "lohen",
+  },
+];
 
 watch(showGame, (val) => {
-  document.body.style.overflow = val ? 'hidden' : ''
-  document.documentElement.style.overflow = val ? 'hidden' : ''
-})
+  document.body.style.overflow = val ? "hidden" : "";
+  document.documentElement.style.overflow = val ? "hidden" : "";
+});
+
+function submit() {
+  const answer = input.value.toLowerCase().trim();
+
+  if (answer === levels[level.value].answer.toLowerCase()) {
+    feedback.value = "💖 Richtig!";
+
+    setTimeout(() => {
+      feedback.value = "";
+      input.value = "";
+      level.value++;
+
+      if (level.value >= levels.length) {
+        finished.value = true;
+      }
+    }, 700);
+  } else {
+    feedback.value = "❌ Leider falsch. Versuch es nochmal.";
+  }
+}
 </script>
 
 <style scoped>
-.head{
+.head {
   position: fixed;
   bottom: 20px;
   left: 20px;
@@ -56,22 +114,22 @@ watch(showGame, (val) => {
   font-size: 26px;
   cursor: pointer;
   z-index: 999999;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
 }
 
-.overlay{
+.overlay {
   position: fixed;
   inset: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0,0,0,0.75);
+  background: rgba(0, 0, 0, 0.75);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 999999;
 }
 
-.card{
+.card {
   width: min(700px, 90%);
   max-height: 80vh;
   overflow-y: auto;
@@ -81,18 +139,52 @@ watch(showGame, (val) => {
   border-radius: 18px;
 }
 
-.text{
-  white-space: pre-wrap;
-  line-height: 2.5;
+.question {
+  margin: 20px 0;
+  line-height: 1.6;
+  font-size: 18px;
 }
 
-.close{
-  margin-top: 20px;
+input {
   width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+}
+
+.btn {
+  width: 100%;
+  padding: 10px;
   background: #ff4fa3;
   border: none;
-  padding: 10px;
   color: white;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.feedback {
+  margin-top: 15px;
+  min-height: 24px;
+  font-weight: bold;
+  color: #ffd54f;
+}
+
+.text {
+  white-space: pre-wrap;
+  line-height: 2;
+}
+
+.close {
+  margin-top: 20px;
+  width: 100%;
+  background: transparent;
+  border: 1px solid white;
+  color: white;
+  padding: 10px;
   border-radius: 10px;
   cursor: pointer;
 }
