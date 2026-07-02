@@ -112,8 +112,8 @@ onBeforeUnmount(() => {
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(6px);
+ backdrop-filter: blur(6px);
+background: rgba(0,0,0,0.65);
   display: flex;
   justify-content: center;
   align-items: center;
