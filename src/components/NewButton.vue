@@ -17,8 +17,8 @@
     <div class="window-body">
       <h2>Yayyy! I love you ♡</h2>
 
-      <!-- image (Vercel-safe) -->
-      <img class="pixel" src="/u90ycvm2roqe1.png" alt="Pixel Cat" />
+      <!-- 💖 IMAGE (from assets import) -->
+      <img class="pixel" :src="img" alt="Pixel Cat" />
 
       <p>
         One lifetime of marriage,
@@ -38,12 +38,12 @@
       💌 Open
     </button>
 
-    <!-- 🌑 overlay popup -->
+    <!-- 🌑 popup overlay -->
     <div v-if="open" class="overlay" @click.self="open = false">
       <div class="popup">
         <h2>💖 I love you 💖</h2>
 
-        <img class="popup-img" src="/u90ycvm2roqe1.png" alt="Pixel Cat" />
+        <img class="popup-img" :src="img" alt="Pixel Cat" />
 
         <p>You make everything better ❤️</p>
 
@@ -53,7 +53,7 @@
       </div>
     </div>
 
-    <!-- floating hearts -->
+    <!-- ❤️ floating hearts -->
     <div
       v-for="heart in hearts"
       :key="heart.id"
@@ -67,6 +67,9 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from "vue";
+
+/* ✅ THIS WAS MISSING BEFORE */
+import img from "@/assets/u90ycvm2roqe1.png";
 
 const hearts = ref([]);
 const open = ref(false);
@@ -112,7 +115,7 @@ onBeforeUnmount(() => {
   box-sizing: border-box;
 }
 
-/* main window */
+/* window */
 .love-window {
   width: 430px;
   border: 6px solid #d97a92;
@@ -171,6 +174,7 @@ onBeforeUnmount(() => {
   padding: 3px 5px;
 }
 
+/* main button */
 button.love {
   margin-top: 25px;
   padding: 12px 18px;
@@ -203,7 +207,7 @@ button.love:hover {
   z-index: 10;
 }
 
-/* 🌑 overlay */
+/* overlay */
 .overlay {
   position: fixed;
   inset: 0;
@@ -214,7 +218,7 @@ button.love:hover {
   z-index: 999;
 }
 
-/* 💖 popup */
+/* popup */
 .popup {
   background: white;
   padding: 30px;
@@ -240,7 +244,7 @@ button.love:hover {
   cursor: pointer;
 }
 
-/* 💖 floating hearts */
+/* hearts */
 .bg-heart {
   position: fixed;
   bottom: -50px;
