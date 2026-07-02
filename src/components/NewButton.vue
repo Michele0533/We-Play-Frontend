@@ -3,17 +3,17 @@ import { ref, watch, onMounted, onBeforeUnmount } from "vue";
 import img from "../assets/u90ycvm2roqe1.png";
 
 /* =========================
-   MODAL STATE
+   STATE (WINDOW OPEN/CLOSE)
 ========================= */
-const showMessage = ref(false);
+const open = ref(false);
 
-/* lock scroll like coupon style */
-watch(showMessage, (val) => {
+/* lock scroll */
+watch(open, (val) => {
   document.body.style.overflow = val ? "hidden" : "";
 });
 
 /* =========================
-   HEART RAIN SYSTEM
+   HEARTS
 ========================= */
 const hearts = ref([]);
 let intervalId;
@@ -46,56 +46,41 @@ onBeforeUnmount(() => {
 
 <template>
   <!-- 💌 BUTTON -->
-  <button class="love-button" @click="showMessage = true">
+  <button class="love-button" @click="open = true">
     💌 Open Love
   </button>
 
-  <!-- 🪟 STATIC WINDOW (NO BLUR, NO MOVEMENT) -->
-  <div class="love-window">
+  <!-- 🌫️ OVERLAY (WINDOW OPENS HERE) -->
+  <div v-if="open" class="overlay" @click.self="open = false">
 
-    <div class="window-header">
-      <span>LOVE</span>
-      <div class="window-buttons">
-        <button>—</button>
-        <button>□</button>
-        <button>×</button>
+    <div class="love-window">
+
+      <div class="window-header">
+        <span>LOVE</span>
+        <button @click="open = false">×</button>
       </div>
+
+      <div class="window-nav">
+        ❤️ • ❤️ • ❤️
+      </div>
+
+      <div class="window-body">
+        <h2>Yayyy! I love you ♡</h2>
+
+        <img class="pixel" :src="img" />
+
+        <p>
+          One lifetime of marriage,
+          a <span class="highlight">lifetime</span>
+          to go ❤️
+        </p>
+      </div>
+
     </div>
 
-    <div class="window-nav">
-      ❤️ • ❤️ • ❤️
-    </div>
-
-    <div class="window-body">
-      <h2>Yayyy! I love you ♡</h2>
-
-      <!-- 💖 HOVER EFFECT -->
-      <img class="pixel" :src="img" />
-
-      <p>
-        One lifetime of marriage,
-        a <span class="highlight">lifetime</span>
-        to go ❤️
-      </p>
-    </div>
   </div>
 
-  <!-- 🌫️ MODAL (coupon style) -->
-  <div v-if="showMessage" class="overlay" @click.self="showMessage = false">
-    <div class="card">
-      <h2>💖 I love you 💖</h2>
-
-      <img class="popup-img" :src="img" />
-
-      <p>You make everything better ❤️</p>
-
-      <button class="close" @click="showMessage = false">
-        Close
-      </button>
-    </div>
-  </div>
-
-  <!-- ❤️ HEART RAIN -->
+  <!-- ❤️ HEARTS -->
   <div
     v-for="heart in hearts"
     :key="heart.id"
@@ -123,14 +108,26 @@ onBeforeUnmount(() => {
   z-index: 9999;
 }
 
-/* 🪟 STATIC WINDOW */
+/* 🌫️ OVERLAY */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+}
+
+/* 🪟 WINDOW (NOW OPENS) */
 .love-window {
   width: 430px;
-  margin: 60px auto;
   border: 6px solid #d97a92;
   border-radius: 18px;
   overflow: hidden;
   box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  animation: pop 0.25s ease;
 }
 
 /* HEADER */
@@ -160,63 +157,13 @@ onBeforeUnmount(() => {
   background-size: 40px 40px;
 }
 
-/* 💖 IMAGE HOVER (IMPORTANT PART) */
 .pixel {
   width: 170px;
-  image-rendering: pixelated;
-  transition: 0.35s ease;
-  cursor: pointer;
+  transition: 0.3s;
 }
 
 .pixel:hover {
   transform: scale(1.15) rotate(-3deg);
-  filter: drop-shadow(0 10px 15px rgba(255, 80, 150, 0.4));
-}
-
-/* TEXT */
-.highlight {
-  background: #3a7cff;
-  color: white;
-  padding: 3px 5px;
-}
-
-/* 🌫️ MODAL */
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.65);
-  backdrop-filter: blur(6px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 99999;
-}
-
-/* CARD */
-.card {
-  width: 340px;
-  border-radius: 22px;
-  background: linear-gradient(135deg,#ff4fa3,#ff8cc6);
-  color: white;
-  padding: 22px;
-  text-align: center;
-}
-
-/* POPUP IMAGE */
-.popup-img {
-  width: 120px;
-  margin: 10px 0;
-}
-
-/* CLOSE */
-.close {
-  margin-top: 12px;
-  background: white;
-  color: #ff4fa3;
-  border: none;
-  padding: 10px;
-  border-radius: 12px;
-  cursor: pointer;
 }
 
 /* ❤️ HEARTS */
@@ -226,13 +173,17 @@ onBeforeUnmount(() => {
   color: #ff5f9b;
   animation: float linear infinite;
   pointer-events: none;
-  opacity: 0.8;
 }
 
-/* FLOAT ANIMATION */
+/* ANIMATIONS */
 @keyframes float {
   0% { transform: translateY(0); opacity: 0; }
   10% { opacity: 1; }
   100% { transform: translateY(-120vh); opacity: 0; }
+}
+
+@keyframes pop {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 </style>
