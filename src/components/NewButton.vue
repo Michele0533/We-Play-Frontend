@@ -1,3 +1,6 @@
+import img from "@/assets/u90ycvm2roqe1.png";
+
+
 <template>
   <div class="love-window">
     <div class="window-header">
@@ -17,7 +20,7 @@
     <div class="window-body">
       <h2>Yayyy! I love you ♡</h2>
 
-      <img class="pixel" src="@src/assets/u90ycvm2roqe1.png" alt="Pixel Cat" />
+      <img class="pixel" src="img" alt="Pixel Cat" />
 
       <p>
         One lifetime of marriage,
