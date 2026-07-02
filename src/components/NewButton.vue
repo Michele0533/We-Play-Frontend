@@ -66,7 +66,7 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from "vue";
-import img from "@/assets/u90ycvm2roqe1.png";
+import img from "../assets/u90ycvm2roqe1.png";
 
 const hearts = ref([]);
 const open = ref(false);
