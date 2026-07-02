@@ -74,11 +74,66 @@ watch(showMessage, (val) => {
   z-index: 9999;
 }
 
-/* 🌫️ OVERLAY */
+/* 🪟 MAIN WINDOW */
+.love-window {
+  width: 430px;
+  margin: 60px auto;
+  border: 6px solid #d97a92;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  transition: 0.3s ease;
+}
+
+/* BLUR WHEN OPEN */
+.blur {
+  filter: blur(6px);
+  transform: scale(0.98);
+}
+
+/* HEADER */
+.window-header {
+  background: #f8b8ca;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* NAV */
+.window-nav {
+  background: #ffe9f0;
+  padding: 15px;
+  text-align: center;
+}
+
+/* BODY */
+.window-body {
+  padding: 35px;
+  text-align: center;
+  background:
+    linear-gradient(45deg, #f7bfd0 25%, transparent 25%),
+    linear-gradient(-45deg, #f7bfd0 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #f7bfd0 75%),
+    linear-gradient(-45deg, transparent 75%, #f7bfd0 75%);
+  background-size: 40px 40px;
+}
+
+.pixel {
+  width: 170px;
+  image-rendering: pixelated;
+}
+
+.highlight {
+  background: #3a7cff;
+  color: white;
+  padding: 3px 5px;
+}
+
+/* 🌫️ OVERLAY (coupon style) */
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0,0,0,0.65);
   backdrop-filter: blur(6px);
 
   display: flex;
@@ -88,68 +143,47 @@ watch(showMessage, (val) => {
   z-index: 99999;
 }
 
-/* 💖 CARD */
+/* 💖 CARD (coupon style but love themed) */
 .card {
   width: 340px;
   border-radius: 22px;
-  background: linear-gradient(135deg, #ff4fa3, #ff8cc6);
+  background: linear-gradient(135deg,#ff4fa3,#ff8cc6);
   color: white;
   padding: 22px;
-  box-shadow: 0 12px 35px rgba(0,0,0,0.45);
   text-align: center;
-  animation: pop 0.25s ease;
+  box-shadow: 0 12px 35px rgba(0,0,0,0.45);
 }
 
-/* HEADER */
-.title {
-  font-size: 20px;
-  font-weight: bold;
-  letter-spacing: 2px;
+/* popup image */
+.popup-img {
+  width: 120px;
+  margin: 10px 0;
 }
 
-.subtitle {
-  font-size: 12px;
-  opacity: 0.9;
-}
-
-/* BODY */
-.card-body {
-  margin-top: 15px;
-}
-
-.pixel {
-  width: 140px;
-  margin: 12px 0;
-}
-
-.highlight {
-  background: white;
-  color: #ff4fa3;
-  padding: 2px 5px;
-  border-radius: 4px;
-}
-
-/* CLOSE BUTTON */
+/* CLOSE */
 .close {
-  margin-top: 15px;
+  margin-top: 12px;
   background: white;
   color: #ff4fa3;
   border: none;
   padding: 10px;
   border-radius: 12px;
   cursor: pointer;
-  font-weight: bold;
 }
 
-/* ANIMATION */
-@keyframes pop {
-  from {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
+/* ❤️ HEARTS */
+.bg-heart {
+  position: fixed;
+  bottom: -50px;
+  color: #ff5f9b;
+  animation: float linear infinite;
+  pointer-events: none;
+}
+
+/* FLOAT */
+@keyframes float {
+  0% { transform: translateY(0); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translateY(-120vh); opacity: 0; }
 }
 </style>
