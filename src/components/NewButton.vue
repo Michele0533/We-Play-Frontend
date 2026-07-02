@@ -65,14 +65,14 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="window-body">
-        <h2>Yayyy! I love you ♡</h2>
+        <h2>Yayyy! Io Ti Amo ♡</h2>
 
         <img class="pixel" :src="img" />
 
         <p>
-          One lifetime of marriage,
-          a <span class="highlight">lifetime</span>
-          to go ❤️
+          Einen Monat und es wird noch,
+          a <span class="highlight">Lebenlang</span>
+          Amore io❤️
         </p>
       </div>
 
