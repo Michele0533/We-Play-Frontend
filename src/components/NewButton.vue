@@ -56,7 +56,7 @@ onBeforeUnmount(() => {
     <div class="love-window">
 
       <div class="window-header">
-        <span>LOVE</span>
+        <span>Einmoatiges!</span>
         <button @click="open = false">×</button>
       </div>
 
