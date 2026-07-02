@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch } from "vue";
-import img from "@/assets/u90ycvm2roqe1.png";
+import img from "../assets/u90ycvm2roqe1.png";
 
 /* =========================
    STATE
