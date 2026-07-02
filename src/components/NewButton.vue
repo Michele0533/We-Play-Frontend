@@ -1,5 +1,5 @@
 <template>
-  <div class="love-window">
+  <div class="love-window" :class="{ blur: open }">
     <div class="window-header">
       <span>LOVE</span>
 
@@ -17,7 +17,6 @@
     <div class="window-body">
       <h2>Yayyy! I love you ♡</h2>
 
-      <!-- 💖 IMAGE (from assets import) -->
       <img class="pixel" :src="img" alt="Pixel Cat" />
 
       <p>
@@ -33,12 +32,12 @@
       </button>
     </div>
 
-    <!-- 💌 open popup button -->
+    <!-- 💌 BUTTON -->
     <button class="open-btn" @click="open = true">
       💌 Open
     </button>
 
-    <!-- 🌑 popup overlay -->
+    <!-- 🌫️ POPUP -->
     <div v-if="open" class="overlay" @click.self="open = false">
       <div class="popup">
         <h2>💖 I love you 💖</h2>
@@ -53,7 +52,7 @@
       </div>
     </div>
 
-    <!-- ❤️ floating hearts -->
+    <!-- ❤️ HEARTS -->
     <div
       v-for="heart in hearts"
       :key="heart.id"
@@ -67,9 +66,7 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from "vue";
-
-/* ✅ THIS WAS MISSING BEFORE */
-import img from "../assets/u90ycvm2roqe1.png";
+import img from "@/assets/u90ycvm2roqe1.png";
 
 const hearts = ref([]);
 const open = ref(false);
@@ -115,7 +112,7 @@ onBeforeUnmount(() => {
   box-sizing: border-box;
 }
 
-/* window */
+/* MAIN WINDOW */
 .love-window {
   width: 430px;
   border: 6px solid #d97a92;
@@ -125,9 +122,16 @@ onBeforeUnmount(() => {
   animation: pop 0.6s ease;
   margin: auto;
   margin-top: 60px;
+  transition: filter 0.3s ease, transform 0.3s ease;
 }
 
-/* header */
+/* BLUR WHEN POPUP OPEN */
+.blur {
+  filter: blur(6px);
+  transform: scale(0.98);
+}
+
+/* HEADER */
 .window-header {
   background: #f8b8ca;
   padding: 15px 18px;
@@ -137,7 +141,7 @@ onBeforeUnmount(() => {
   border-bottom: 5px solid #d97a92;
 }
 
-/* nav */
+/* NAV */
 .window-nav {
   background: #ffe9f0;
   padding: 15px;
@@ -147,7 +151,7 @@ onBeforeUnmount(() => {
   border-bottom: 5px solid #d97a92;
 }
 
-/* body */
+/* BODY */
 .window-body {
   padding: 35px;
   text-align: center;
@@ -174,7 +178,7 @@ onBeforeUnmount(() => {
   padding: 3px 5px;
 }
 
-/* main button */
+/* MAIN BUTTON */
 button.love {
   margin-top: 25px;
   padding: 12px 18px;
@@ -182,7 +186,6 @@ button.love {
   border-radius: 12px;
   background: #ff5b96;
   color: white;
-  font-family: inherit;
   cursor: pointer;
   transition: 0.3s;
 }
@@ -192,7 +195,7 @@ button.love:hover {
   box-shadow: 0 10px 20px rgba(255, 80, 150, 0.3);
 }
 
-/* 💌 open button */
+/* 💌 OPEN BUTTON */
 .open-btn {
   position: fixed;
   bottom: 20px;
@@ -203,22 +206,22 @@ button.love:hover {
   background: #ff5b96;
   color: white;
   cursor: pointer;
-  font-family: inherit;
   z-index: 10;
 }
 
-/* overlay */
+/* OVERLAY */
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 999;
 }
 
-/* popup */
+/* POPUP */
 .popup {
   background: white;
   padding: 30px;
@@ -244,7 +247,7 @@ button.love:hover {
   cursor: pointer;
 }
 
-/* hearts */
+/* HEARTS */
 .bg-heart {
   position: fixed;
   bottom: -50px;
@@ -254,7 +257,7 @@ button.love:hover {
   opacity: 0.8;
 }
 
-/* animations */
+/* ANIMATIONS */
 @keyframes float {
   0% {
     transform: translateY(0) rotate(0deg);
