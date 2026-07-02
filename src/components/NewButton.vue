@@ -1,196 +1,155 @@
-<template>
-  <!-- MAIN BACKGROUND (ONLY ONCE) -->
-  <div class="love-window" :class="{ blur: open }">
-
-    <div class="window-header">
-      <span>LOVE</span>
-
-      <div class="window-buttons">
-        <button>—</button>
-        <button>□</button>
-        <button>×</button>
-      </div>
-    </div>
-
-    <div class="window-nav">
-      ❤️ • ❤️ • ❤️
-    </div>
-
-    <div class="window-body">
-      <h2>Yayyy! I love you ♡</h2>
-
-      <img class="pixel" :src="img" alt="Pixel Cat" />
-
-      <p>
-        One lifetime of marriage,
-        a <span class="highlight">lifetime</span>
-        to go.
-        <br /><br />
-        Happy Anniversary ❤️
-      </p>
-    </div>
-
-  </div>
-
-  <!-- 💌 BUTTON -->
-  <button class="open-btn" @click="open = true">
-    💌 Open
-  </button>
-
-  <!-- 🌫️ POPUP (ONLY ONE WINDOW) -->
-  <div v-if="open" class="overlay" @click.self="open = false">
-    <div class="popup">
-      <h2>💖 I love you 💖</h2>
-
-      <img class="popup-img" :src="img" />
-
-      <p>You make everything better ❤️</p>
-
-      <button class="close-btn" @click="open = false">
-        Close
-      </button>
-    </div>
-  </div>
-
-  <!-- ❤️ hearts -->
-  <div
-    v-for="heart in hearts"
-    :key="heart.id"
-    class="bg-heart"
-    :style="heart.style"
-  >
-    ❤
-  </div>
-</template>
-
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from "vue";
-import img from "../assets/u90ycvm2roqe1.png";
+import { ref, watch } from "vue";
+import img from "@/assets/u90ycvm2roqe1.png";
 
-const open = ref(false);
-const hearts = ref([]);
+/* =========================
+   STATE
+========================= */
+const showMessage = ref(false);
 
-let intervalId;
-
-function createHeart() {
-  const id = Date.now() + Math.random();
-
-  hearts.value.push({
-    id,
-    style: {
-      left: Math.random() * 100 + "vw",
-      fontSize: 15 + Math.random() * 35 + "px",
-      animationDuration: 5 + Math.random() * 5 + "s",
-    },
-  });
-
-  setTimeout(() => {
-    hearts.value = hearts.value.filter(h => h.id !== id);
-  }, 10000);
-}
-
-onMounted(() => {
-  intervalId = setInterval(createHeart, 220);
-});
-
-onBeforeUnmount(() => {
-  clearInterval(intervalId);
+/* =========================
+   FREEZE BACKGROUND (like your example)
+========================= */
+watch(showMessage, (val) => {
+  document.body.style.overflow = val ? "hidden" : "";
+  document.documentElement.style.overflow = val ? "hidden" : "";
 });
 </script>
 
+<template>
+  <!-- 💌 BUTTON -->
+  <button class="love-button" @click="showMessage = true">
+    💌 Open Love
+  </button>
+
+  <!-- 🌫️ OVERLAY -->
+  <div v-if="showMessage" class="overlay" @click.self="showMessage = false">
+
+    <div class="card">
+
+      <!-- HEADER -->
+      <div class="card-header">
+        <div class="title">LOVE LETTER</div>
+        <div class="subtitle">just for you ❤️</div>
+      </div>
+
+      <!-- BODY -->
+      <div class="card-body">
+        <h2>Yayyy! I love you ♡</h2>
+
+        <img class="pixel" :src="img" alt="cat" />
+
+        <p>
+          One lifetime of marriage,
+          a <span class="highlight">lifetime</span>
+          to go ❤️
+        </p>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="card-footer">
+        <button class="close" @click="showMessage = false">
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+</template>
+
 <style scoped>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
 
-/* MAIN BACKGROUND WINDOW */
-.love-window {
-  width: 430px;
-  margin: 60px auto;
-  border: 6px solid #d97a92;
-  border-radius: 18px;
-  overflow: hidden;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-  transition: 0.3s ease;
-}
-
-/* BLUR WHEN OPEN */
-.blur {
-  filter: blur(6px);
-  transform: scale(0.98);
-}
-
-/* HEADER */
-.window-header {
-  background: #f8b8ca;
-  padding: 15px 18px;
-  display: flex;
-  justify-content: space-between;
-}
-
-/* NAV */
-.window-nav {
-  background: #ffe9f0;
-  padding: 15px;
-  text-align: center;
-}
-
-/* BODY */
-.window-body {
-  padding: 35px;
-  text-align: center;
-}
-
-.pixel {
-  width: 170px;
-}
-
-/* BUTTON */
-.open-btn {
+/* 💌 BUTTON */
+.love-button {
   position: fixed;
   bottom: 20px;
   left: 20px;
-  background: #ff5b96;
-  color: white;
+  background: #ff4fa3;
   border: none;
-  padding: 10px 14px;
-  border-radius: 10px;
+  padding: 14px 18px;
+  border-radius: 30px;
+  color: white;
+  font-weight: bold;
   cursor: pointer;
-  z-index: 10;
+  z-index: 9999;
 }
 
-/* OVERLAY */
+/* 🌫️ OVERLAY */
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.35);
+  background: rgba(0,0,0,0.6);
   backdrop-filter: blur(6px);
+
   display: flex;
   justify-content: center;
   align-items: center;
+
+  z-index: 99999;
 }
 
-/* POPUP */
-.popup {
-  background: white;
-  padding: 30px;
-  border-radius: 16px;
+/* 💖 CARD */
+.card {
+  width: 340px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #ff4fa3, #ff8cc6);
+  color: white;
+  padding: 22px;
+  box-shadow: 0 12px 35px rgba(0,0,0,0.45);
   text-align: center;
-  width: 300px;
+  animation: pop 0.25s ease;
 }
 
-/* HEARTS */
-.bg-heart {
-  position: fixed;
-  bottom: -50px;
-  animation: float linear infinite;
+/* HEADER */
+.title {
+  font-size: 20px;
+  font-weight: bold;
+  letter-spacing: 2px;
 }
 
-/* animation */
-@keyframes float {
-  0% { transform: translateY(0); opacity: 0; }
-  100% { transform: translateY(-120vh); opacity: 0; }
+.subtitle {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+/* BODY */
+.card-body {
+  margin-top: 15px;
+}
+
+.pixel {
+  width: 140px;
+  margin: 12px 0;
+}
+
+.highlight {
+  background: white;
+  color: #ff4fa3;
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+/* CLOSE BUTTON */
+.close {
+  margin-top: 15px;
+  background: white;
+  color: #ff4fa3;
+  border: none;
+  padding: 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* ANIMATION */
+@keyframes pop {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 </style>
