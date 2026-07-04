@@ -25,7 +25,7 @@
 <script setup>
 import { ref } from "vue";
 
-const API = "http://localhost:3000/api/genshin";
+const API = "https://we-play-backend.onrender.com/api/genshin";
 
 // 🔁 change these
 const myUID = "726814599";
