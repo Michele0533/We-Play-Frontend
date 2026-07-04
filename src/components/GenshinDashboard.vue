@@ -7,17 +7,19 @@
     <p v-if="loading">Loading...</p>
 
     <div v-if="data">
+
       <h2>🎉 Current Banners</h2>
       <pre>{{ data.banners }}</pre>
 
-      <h2>🏆 My Ranking</h2>
+      <h2>🏆 My Best Character</h2>
       <pre>{{ data.me }}</pre>
 
-      <h2>💖 Girlfriend Ranking</h2>
+      <h2>💖 Girlfriend Best Character</h2>
       <pre>{{ data.gf }}</pre>
 
       <h2>📖 Build (Furina)</h2>
       <pre>{{ data.build }}</pre>
+
     </div>
   </div>
 </template>
@@ -27,7 +29,6 @@ import { ref } from "vue";
 
 const API = "https://we-play-backend.onrender.com/api/genshin";
 
-// 🔁 change these
 const myUID = "726814599";
 const gfUID = "706763823";
 
@@ -40,8 +41,12 @@ async function loadData() {
   try {
     const [banners, me, gf, build] = await Promise.all([
       fetch(`${API}/banners/current`).then(r => r.json()),
-      fetch(`${API}/player/${myUID}/rankings`).then(r => r.json()),
-      fetch(`${API}/player/${gfUID}/rankings`).then(r => r.json()),
+
+      // 🏆 NEW BEST CHARACTER ROUTE
+      fetch(`${API}/player/${myUID}/best`).then(r => r.json()),
+
+      fetch(`${API}/player/${gfUID}/best`).then(r => r.json()),
+
       fetch(`${API}/builds/furina`).then(r => r.json())
     ]);
 
@@ -51,8 +56,9 @@ async function loadData() {
       gf,
       build
     };
+
   } catch (err) {
-    console.error(err);
+    console.error("Frontend error:", err);
     data.value = null;
   }
 
@@ -70,8 +76,8 @@ async function loadData() {
   background: #6c5ce7;
   color: white;
   border: none;
-  cursor: pointer;
   border-radius: 8px;
+  cursor: pointer;
 }
 
 .btn:hover {
