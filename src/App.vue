@@ -12,17 +12,17 @@ const page = ref('games')
 <template>
   <h1>WePlay 🎮</h1>
 
-<nav>
-  <button @click="page = 'games'">🎮 Games</button>
-  <button @click="page = 'movies'">🎬 Movies</button>
-  <button @click="page = 'genshin'">⚡ Genshin</button>
-</nav>
+  <nav>
+    <button @click="page = 'games'">🎮 Games</button>
+    <button @click="page = 'movies'">🎬 Movies</button>
+    <button @click="page = 'genshin'">⚡ Genshin</button>
+  </nav>
 
   <LoveMessage />
 
-  <!-- 🔥 HIER IST DER FIX -->
   <NewButton />
 
   <GameView v-if="page === 'games'" />
   <MovieView v-if="page === 'movies'" />
+  <GenshinDashboard v-if="page === 'genshin'" />
 </template>
