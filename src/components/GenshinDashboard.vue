@@ -28,8 +28,8 @@ import { ref } from "vue";
 const API = "http://localhost:3000/api/genshin";
 
 // 🔁 change these
-const myUID = "700000000";
-const gfUID = "700000001";
+const myUID = "726814599";
+const gfUID = "706763823";
 
 const data = ref(null);
 const loading = ref(false);
