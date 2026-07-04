@@ -1,5 +1,6 @@
 <template>
   <div class="genshin-dashboard">
+
     <button @click="loadData" class="btn">
       🎮 Load Genshin Dashboard
     </button>
@@ -8,17 +9,61 @@
 
     <div v-if="data">
 
+      <!-- ================= BANNERS ================= -->
       <h2>🎉 Current Banners</h2>
-      <pre>{{ data.banners }}</pre>
+      <pre class="box">{{ data.banners }}</pre>
 
+      <!-- ================= YOU ================= -->
       <h2>🏆 My Best Character</h2>
-      <pre>{{ data.me }}</pre>
 
+      <div v-if="data.me?.bestCharacter" class="card">
+        <h3>
+          {{ data.me.bestCharacter.name }} (Lv. {{ data.me.bestCharacter.level }})
+        </h3>
+
+        <div v-if="data.me.bestCharacter.weapon">
+          <h4>⚔️ Weapon</h4>
+          <pre class="box">{{ data.me.bestCharacter.weapon }}</pre>
+        </div>
+
+        <div v-if="data.me.bestCharacter.artifacts?.length">
+          <h4>🛡️ Artifacts</h4>
+
+          <div
+            v-for="(art, index) in data.me.bestCharacter.artifacts"
+            :key="index"
+            class="item"
+          >
+            <pre class="box">{{ art }}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= GF ================= -->
       <h2>💖 Girlfriend Best Character</h2>
-      <pre>{{ data.gf }}</pre>
 
-      <h2>📖 Build (Furina)</h2>
-      <pre>{{ data.build }}</pre>
+      <div v-if="data.gf?.bestCharacter" class="card">
+        <h3>
+          {{ data.gf.bestCharacter.name }} (Lv. {{ data.gf.bestCharacter.level }})
+        </h3>
+
+        <div v-if="data.gf.bestCharacter.weapon">
+          <h4>⚔️ Weapon</h4>
+          <pre class="box">{{ data.gf.bestCharacter.weapon }}</pre>
+        </div>
+
+        <div v-if="data.gf.bestCharacter.artifacts?.length">
+          <h4>🛡️ Artifacts</h4>
+
+          <div
+            v-for="(art, index) in data.gf.bestCharacter.artifacts"
+            :key="index"
+            class="item"
+          >
+            <pre class="box">{{ art }}</pre>
+          </div>
+        </div>
+      </div>
 
     </div>
   </div>
@@ -39,26 +84,16 @@ async function loadData() {
   loading.value = true;
 
   try {
-    const [banners, me, gf, build] = await Promise.all([
+    const [banners, me, gf] = await Promise.all([
       fetch(`${API}/banners/current`).then(r => r.json()),
-
-      // 🏆 NEW BEST CHARACTER ROUTE
       fetch(`${API}/player/${myUID}/best`).then(r => r.json()),
-
       fetch(`${API}/player/${gfUID}/best`).then(r => r.json()),
-
-      fetch(`${API}/builds/furina`).then(r => r.json())
     ]);
 
-    data.value = {
-      banners,
-      me,
-      gf,
-      build
-    };
+    data.value = { banners, me, gf };
 
   } catch (err) {
-    console.error("Frontend error:", err);
+    console.error(err);
     data.value = null;
   }
 
@@ -84,11 +119,23 @@ async function loadData() {
   background: #5a4bd6;
 }
 
-pre {
+.card {
+  background: #1a1a1a;
+  padding: 15px;
+  border-radius: 10px;
+  margin-top: 15px;
+  color: white;
+}
+
+.box {
   background: #111;
   color: #0f0;
   padding: 10px;
-  border-radius: 8px;
+  border-radius: 6px;
   overflow-x: auto;
+}
+
+.item {
+  margin-top: 5px;
 }
 </style>
