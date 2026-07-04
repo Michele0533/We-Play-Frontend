@@ -1,5 +1,5 @@
 <template>
-  <div class="genshin-dashboard">
+  <div class="page">
 
     <button @click="loadData" class="btn">
       🎮 Load Genshin Dashboard
@@ -10,29 +10,39 @@
     <div v-if="data">
 
       <!-- ================= BANNERS ================= -->
-      <h2>🎉 Current Banners</h2>
-      <pre class="box">{{ data.banners }}</pre>
+      <section class="section">
+        <h2>🎉 Current Banners</h2>
+        <pre class="debug">{{ data.banners }}</pre>
+      </section>
 
-      <!-- ================= MY CHARACTER ================= -->
-      <h2>🏆 My Best Character</h2>
+      <!-- ================= YOU ================= -->
+      <section class="section">
 
-      <div v-if="data.me?.bestCharacter" class="card">
+        <h2>🏆 My Best Character</h2>
 
-        <!-- CHARACTER NAME -->
-        <h3>
-          {{ data.me.bestCharacter.name }}
-          (Lv. {{ data.me.bestCharacter.level }})
-        </h3>
+        <div v-if="data.me?.bestCharacter" class="character-card">
 
-        <!-- WEAPON -->
-        <div v-if="data.me.bestCharacter.weapon">
-          <h4>⚔️ Weapon</h4>
-          <pre class="box">{{ data.me.bestCharacter.weapon }}</pre>
+          <!-- PORTRAIT -->
+          <img
+            class="portrait"
+            :src="getCharacterIcon(data.me.bestCharacter)"
+          />
+
+          <div class="info">
+            <h3>
+              {{ data.me.bestCharacter.name }}
+            </h3>
+
+            <p>Lv. {{ data.me.bestCharacter.level }}</p>
+
+            <p v-if="data.me.bestCharacter.weapon">
+              ⚔️ Weapon equipped
+            </p>
+          </div>
+
         </div>
 
-        <!-- ARTIFACTS GRID -->
-        <h4>🛡️ Artifacts</h4>
-
+        <!-- ARTIFACTS -->
         <div class="grid">
           <div
             v-for="(art, i) in data.me.bestCharacter.artifacts"
@@ -40,77 +50,57 @@
             class="artifact-card"
           >
 
-            <!-- IMAGE -->
             <img
+              class="artifact-img"
               :src="`https://enka.network/ui/${art.flat.icon}.png`"
-              class="img"
             />
 
-            <!-- MAIN STAT -->
-            <p>
-              <b>Main:</b>
-              {{ art.flat.reliquaryMainstat.mainPropId }}
-              ({{ art.flat.reliquaryMainstat.statValue }})
-            </p>
+            <div class="artifact-info">
+              <b>{{ art.flat.equipType }}</b>
 
-            <!-- SUB STATS -->
-            <div v-for="(sub, j) in art.flat.reliquarySubstats" :key="j">
-              <small>
-                {{ sub.appendPropId }}: {{ sub.statValue }}
+              <p>
+                Main:
+                {{ art.flat.reliquaryMainstat.mainPropId }}
+                ({{ art.flat.reliquaryMainstat.statValue }})
+              </p>
+
+              <small
+                v-for="(sub, j) in art.flat.reliquarySubstats"
+                :key="j"
+              >
+                {{ sub.appendPropId }}: {{ sub.statValue }} <br />
               </small>
-            </div>
 
-          </div>
-        </div>
-      </div>
-
-      <!-- ================= GIRLFRIEND ================= -->
-      <h2>💖 Girlfriend Best Character</h2>
-
-      <div v-if="data.gf?.bestCharacter" class="card">
-
-        <h3>
-          {{ data.gf.bestCharacter.name }}
-          (Lv. {{ data.gf.bestCharacter.level }})
-        </h3>
-
-        <div v-if="data.gf.bestCharacter.weapon">
-          <h4>⚔️ Weapon</h4>
-          <pre class="box">{{ data.gf.bestCharacter.weapon }}</pre>
-        </div>
-
-        <h4>🛡️ Artifacts</h4>
-
-        <div class="grid">
-          <div
-            v-for="(art, i) in data.gf.bestCharacter.artifacts"
-            :key="i"
-            class="artifact-card"
-          >
-
-            <img
-              :src="`https://enka.network/ui/${art.flat.icon}.png`"
-              class="img"
-            />
-
-            <p>
-              <b>Main:</b>
-              {{ art.flat.reliquaryMainstat.mainPropId }}
-              ({{ art.flat.reliquaryMainstat.statValue }})
-            </p>
-
-            <div v-for="(sub, j) in art.flat.reliquarySubstats" :key="j">
-              <small>
-                {{ sub.appendPropId }}: {{ sub.statValue }}
-              </small>
             </div>
 
           </div>
         </div>
 
-      </div>
+      </section>
+
+      <!-- ================= GF ================= -->
+      <section class="section">
+
+        <h2>💖 Girlfriend Best Character</h2>
+
+        <div v-if="data.gf?.bestCharacter" class="character-card">
+
+          <img
+            class="portrait"
+            :src="getCharacterIcon(data.gf.bestCharacter)"
+          />
+
+          <div class="info">
+            <h3>{{ data.gf.bestCharacter.name }}</h3>
+            <p>Lv. {{ data.gf.bestCharacter.level }}</p>
+          </div>
+
+        </div>
+
+      </section>
 
     </div>
+
   </div>
 </template>
 
@@ -139,65 +129,103 @@ async function loadData() {
 
   } catch (err) {
     console.error(err);
-    data.value = null;
   }
 
   loading.value = false;
 }
+
+/* =========================
+ 🖼️ CHARACTER ICON HELPER
+========================= */
+function getCharacterIcon(char) {
+  // Enka usually provides icon in different fields depending on version
+  const icon =
+    char?.icon ||
+    char?.avatarIcon ||
+    char?.sideIcon ||
+    char?.name;
+
+  return `https://enka.network/ui/${icon}.png`;
+}
 </script>
 
 <style scoped>
-.genshin-dashboard {
+.page {
   padding: 20px;
   font-family: Arial;
+  background: #0b0b10;
+  color: white;
 }
 
 .btn {
   padding: 10px 15px;
   background: #6c5ce7;
-  color: white;
   border: none;
-  border-radius: 8px;
+  color: white;
+  border-radius: 10px;
   cursor: pointer;
 }
 
-.btn:hover {
-  background: #5a4bd6;
+.section {
+  margin-top: 20px;
 }
 
-.card {
-  background: #1a1a1a;
+/* ================= CHARACTER CARD ================= */
+.character-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: linear-gradient(145deg, #1a1a25, #111);
   padding: 15px;
+  border-radius: 15px;
+  margin-top: 10px;
+}
+
+.portrait {
+  width: 90px;
+  height: 90px;
   border-radius: 12px;
-  margin-top: 15px;
-  color: white;
+  border: 2px solid #6c5ce7;
+  object-fit: cover;
 }
 
-.box {
-  background: #111;
-  color: #0f0;
-  padding: 10px;
-  border-radius: 6px;
-  overflow-x: auto;
+.info h3 {
+  margin: 0;
+  color: #fff;
 }
 
+/* ================= ARTIFACT GRID ================= */
 .grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
-  margin-top: 10px;
+  margin-top: 15px;
 }
 
 .artifact-card {
+  display: flex;
+  gap: 10px;
+  background: #141420;
+  padding: 10px;
+  border-radius: 12px;
+}
+
+.artifact-img {
+  width: 60px;
+  height: 60px;
+}
+
+.artifact-info {
+  font-size: 12px;
+  color: #ccc;
+}
+
+/* debug banners */
+.debug {
   background: #111;
   padding: 10px;
   border-radius: 10px;
-}
-
-.img {
-  width: 70px;
-  height: 70px;
-  display: block;
-  margin-bottom: 5px;
+  color: #0f0;
+  overflow-x: auto;
 }
 </style>
