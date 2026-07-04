@@ -13,38 +13,65 @@
       <h2>🎉 Current Banners</h2>
       <pre class="box">{{ data.banners }}</pre>
 
-      <!-- ================= YOU ================= -->
+      <!-- ================= MY CHARACTER ================= -->
       <h2>🏆 My Best Character</h2>
 
       <div v-if="data.me?.bestCharacter" class="card">
+
+        <!-- CHARACTER NAME -->
         <h3>
-          {{ data.me.bestCharacter.name }} (Lv. {{ data.me.bestCharacter.level }})
+          {{ data.me.bestCharacter.name }}
+          (Lv. {{ data.me.bestCharacter.level }})
         </h3>
 
+        <!-- WEAPON -->
         <div v-if="data.me.bestCharacter.weapon">
           <h4>⚔️ Weapon</h4>
           <pre class="box">{{ data.me.bestCharacter.weapon }}</pre>
         </div>
 
-        <div v-if="data.me.bestCharacter.artifacts?.length">
-          <h4>🛡️ Artifacts</h4>
+        <!-- ARTIFACTS GRID -->
+        <h4>🛡️ Artifacts</h4>
 
+        <div class="grid">
           <div
-            v-for="(art, index) in data.me.bestCharacter.artifacts"
-            :key="index"
-            class="item"
+            v-for="(art, i) in data.me.bestCharacter.artifacts"
+            :key="i"
+            class="artifact-card"
           >
-            <pre class="box">{{ art }}</pre>
+
+            <!-- IMAGE -->
+            <img
+              :src="`https://enka.network/ui/${art.flat.icon}.png`"
+              class="img"
+            />
+
+            <!-- MAIN STAT -->
+            <p>
+              <b>Main:</b>
+              {{ art.flat.reliquaryMainstat.mainPropId }}
+              ({{ art.flat.reliquaryMainstat.statValue }})
+            </p>
+
+            <!-- SUB STATS -->
+            <div v-for="(sub, j) in art.flat.reliquarySubstats" :key="j">
+              <small>
+                {{ sub.appendPropId }}: {{ sub.statValue }}
+              </small>
+            </div>
+
           </div>
         </div>
       </div>
 
-      <!-- ================= GF ================= -->
+      <!-- ================= GIRLFRIEND ================= -->
       <h2>💖 Girlfriend Best Character</h2>
 
       <div v-if="data.gf?.bestCharacter" class="card">
+
         <h3>
-          {{ data.gf.bestCharacter.name }} (Lv. {{ data.gf.bestCharacter.level }})
+          {{ data.gf.bestCharacter.name }}
+          (Lv. {{ data.gf.bestCharacter.level }})
         </h3>
 
         <div v-if="data.gf.bestCharacter.weapon">
@@ -52,17 +79,35 @@
           <pre class="box">{{ data.gf.bestCharacter.weapon }}</pre>
         </div>
 
-        <div v-if="data.gf.bestCharacter.artifacts?.length">
-          <h4>🛡️ Artifacts</h4>
+        <h4>🛡️ Artifacts</h4>
 
+        <div class="grid">
           <div
-            v-for="(art, index) in data.gf.bestCharacter.artifacts"
-            :key="index"
-            class="item"
+            v-for="(art, i) in data.gf.bestCharacter.artifacts"
+            :key="i"
+            class="artifact-card"
           >
-            <pre class="box">{{ art }}</pre>
+
+            <img
+              :src="`https://enka.network/ui/${art.flat.icon}.png`"
+              class="img"
+            />
+
+            <p>
+              <b>Main:</b>
+              {{ art.flat.reliquaryMainstat.mainPropId }}
+              ({{ art.flat.reliquaryMainstat.statValue }})
+            </p>
+
+            <div v-for="(sub, j) in art.flat.reliquarySubstats" :key="j">
+              <small>
+                {{ sub.appendPropId }}: {{ sub.statValue }}
+              </small>
+            </div>
+
           </div>
         </div>
+
       </div>
 
     </div>
@@ -104,6 +149,7 @@ async function loadData() {
 <style scoped>
 .genshin-dashboard {
   padding: 20px;
+  font-family: Arial;
 }
 
 .btn {
@@ -122,7 +168,7 @@ async function loadData() {
 .card {
   background: #1a1a1a;
   padding: 15px;
-  border-radius: 10px;
+  border-radius: 12px;
   margin-top: 15px;
   color: white;
 }
@@ -135,7 +181,23 @@ async function loadData() {
   overflow-x: auto;
 }
 
-.item {
-  margin-top: 5px;
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.artifact-card {
+  background: #111;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.img {
+  width: 70px;
+  height: 70px;
+  display: block;
+  margin-bottom: 5px;
 }
 </style>
