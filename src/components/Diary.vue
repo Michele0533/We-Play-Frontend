@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 
-const API = "http://localhost:3000";
+const API = "https://we-play-backend.onrender.com";
 
 const author = ref("Micky");
 const text = ref("");
