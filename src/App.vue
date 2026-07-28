@@ -60,10 +60,6 @@ const showPopup = ref(true)
     </button>
 
 
-    <button @click="page = 'genshin'">
-      ⚡ Genshin
-    </button>
-
 
     <button @click="page = 'diary'">
       📖 Tagebuch
@@ -92,9 +88,6 @@ const showPopup = ref(true)
   />
 
 
-  <GenshinDashboard 
-    v-if="page === 'genshin'" 
-  />
 
 
   <Diary 
