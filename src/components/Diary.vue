@@ -9,26 +9,33 @@ const entries = ref([]);
 
 
 async function loadDiary() {
+
   const res = await fetch(`${API}/api/diary`);
+
   entries.value = await res.json();
+
 }
+
 
 
 async function saveEntry() {
 
   if (!text.value.trim()) return;
 
+
   await fetch(`${API}/api/diary`, {
 
     method: "POST",
 
-    headers: {
-      "Content-Type": "application/json"
+    headers:{
+      "Content-Type":"application/json"
     },
 
-    body: JSON.stringify({
+    body:JSON.stringify({
+
       author: author.value,
       text: text.value
+
     })
 
   });
@@ -37,15 +44,17 @@ async function saveEntry() {
   text.value = "";
 
   loadDiary();
+
 }
 
 
 
-async function deleteEntry(id) {
+async function deleteEntry(id){
 
-  await fetch(`${API}/api/diary/${id}`, {
-    method: "DELETE"
+  await fetch(`${API}/api/diary/${id}`,{
+    method:"DELETE"
   });
+
 
   loadDiary();
 
@@ -58,11 +67,80 @@ onMounted(loadDiary);
 </script>
 
 
+
 <template>
 
-<div class="diary">
+<div class="chat-container">
 
-<h2>📖 Unser Tagebuch ❤️</h2>
+
+<!-- Header -->
+
+<div class="chat-header">
+
+❤️ Unser Tagebuch ❤️
+
+</div>
+
+
+
+<!-- Nachrichten -->
+
+<div class="messages">
+
+
+<div
+v-for="entry in entries"
+:key="entry._id"
+
+class="message"
+
+:class="entry.author"
+
+>
+
+
+<div class="name">
+
+{{entry.author}}
+
+</div>
+
+
+<div class="bubble">
+
+{{entry.text}}
+
+</div>
+
+
+<div class="time">
+
+{{new Date(entry.createdAt).toLocaleString("de-DE")}}
+
+</div>
+
+
+
+<button 
+class="delete"
+@click="deleteEntry(entry._id)"
+>
+🗑
+</button>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+<!-- Schreiben -->
+
+<div class="input-area">
 
 
 <select v-model="author">
@@ -73,50 +151,18 @@ onMounted(loadDiary);
 </select>
 
 
+
 <textarea
 v-model="text"
-placeholder="Schreibe deine Gedanken..."
+placeholder="Schreibe eine Nachricht..."
 ></textarea>
 
 
+
 <button @click="saveEntry">
-💌 Speichern
-</button>
 
+💌 Senden
 
-
-<div
-v-for="entry in entries"
-:key="entry._id"
-class="entry"
-:class="entry.author"
->
-
-
-<div class="header">
-
-<strong>
-{{ entry.author === "Micky" ? "💙 Micky" : "💗 Tina" }}
-</strong>
-
-
-<small>
-{{ new Date(entry.createdAt).toLocaleString("de-DE") }}
-</small>
-
-</div>
-
-
-<p>
-{{ entry.text }}
-</p>
-
-
-<button
-class="delete"
-@click="deleteEntry(entry._id)"
->
-🗑️
 </button>
 
 
@@ -124,73 +170,177 @@ class="delete"
 
 
 </div>
+
 
 </template>
 
 
 
+
 <style scoped>
 
-.diary {
 
-max-width:700px;
+.chat-container{
+
+width:90%;
+
+max-width:1000px;
+
+height:75vh;
+
 margin:40px auto;
-padding:25px;
 
-background:#fff0f5;
-border-radius:20px;
+display:flex;
 
-color:#333;
+flex-direction:column;
 
-}
-
-
-h2 {
-
-text-align:center;
-color:#ff4f9a;
-
-}
-
-
-
-select,
-textarea {
-
-width:100%;
-padding:12px;
-
-margin-top:15px;
-
-border-radius:12px;
-border:1px solid #ddd;
-
-}
-
-
-
-textarea {
-
-height:130px;
-resize:none;
-
-}
-
-
-
-button {
-
-margin-top:15px;
-
-padding:12px 25px;
-
-border:none;
+background:#efe7df;
 
 border-radius:20px;
+
+overflow:hidden;
+
+box-shadow:
+0 10px 30px rgba(0,0,0,.25);
+
+}
+
+
+
+/* HEADER */
+
+.chat-header{
 
 background:#ff5c99;
 
 color:white;
+
+font-size:25px;
+
+font-weight:bold;
+
+padding:20px;
+
+text-align:center;
+
+}
+
+
+
+/* CHAT */
+
+.messages{
+
+flex:1;
+
+padding:25px;
+
+overflow-y:auto;
+
+display:flex;
+
+flex-direction:column;
+
+gap:15px;
+
+}
+
+
+
+
+.message{
+
+max-width:70%;
+
+position:relative;
+
+}
+
+
+
+.message.Micky{
+
+align-self:flex-end;
+
+text-align:right;
+
+}
+
+
+
+.message.Tina{
+
+align-self:flex-start;
+
+}
+
+
+
+
+.name{
+
+font-size:13px;
+
+font-weight:bold;
+
+margin-bottom:5px;
+
+}
+
+
+
+.bubble{
+
+padding:15px;
+
+border-radius:18px;
+
+font-size:17px;
+
+white-space:pre-wrap;
+
+}
+
+
+
+.Micky .bubble{
+
+background:#a7ddff;
+
+border-bottom-right-radius:3px;
+
+}
+
+
+
+.Tina .bubble{
+
+background:#ffb6d9;
+
+border-bottom-left-radius:3px;
+
+}
+
+
+
+.time{
+
+font-size:11px;
+
+color:#777;
+
+margin-top:5px;
+
+}
+
+
+
+
+.delete{
+
+background:none;
+
+border:none;
 
 cursor:pointer;
 
@@ -198,48 +348,64 @@ cursor:pointer;
 
 
 
-.entry {
 
-margin-top:25px;
+/* INPUT */
 
-padding:20px;
+.input-area{
 
 background:white;
 
-border-radius:15px;
-
-}
-
-
-
-.entry.Micky {
-
-border-left:7px solid #4fa3ff;
-
-}
-
-
-.entry.Tina {
-
-border-left:7px solid #ff69b4;
-
-}
-
-
-
-.header {
+padding:15px;
 
 display:flex;
 
-justify-content:space-between;
+gap:10px;
 
 }
 
 
 
-.delete {
+select{
 
-background:#e74c3c;
+border-radius:10px;
+
+padding:10px;
+
+}
+
+
+
+textarea{
+
+flex:1;
+
+height:50px;
+
+resize:none;
+
+padding:10px;
+
+border-radius:12px;
+
+border:1px solid #ccc;
+
+}
+
+
+
+button{
+
+background:#ff5c99;
+
+color:white;
+
+border:none;
+
+padding:12px 20px;
+
+border-radius:20px;
+
+cursor:pointer;
 
 }
 
