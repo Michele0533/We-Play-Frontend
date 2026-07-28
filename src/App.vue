@@ -5,7 +5,6 @@ import GameView from './components/GameView.vue'
 import MovieView from './components/MovieView.vue'
 import LoveMessage from './components/LoveMessage.vue'
 import NewButton from './components/NewButton.vue'
-import GenshinDashboard from './components/GenshinDashboard.vue'
 import Diary from './components/Diary.vue'
 
 
