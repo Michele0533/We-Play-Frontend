@@ -8,7 +8,6 @@ const games = ref([])
 const myGames = ref([])
 const showDropdown = ref(false)
 
-
 // 🔍 Suche
 const searchGames = async () => {
   if (!search.value.trim()) {
@@ -25,26 +24,21 @@ const searchGames = async () => {
   showDropdown.value = true
 }
 
-
 // 📥 Liste laden
 const loadGames = async () => {
   const res = await fetch(`${API}/api/games`)
   myGames.value = await res.json()
 }
 
-
 // ➕ Spiel hinzufügen
 const addGame = async (game) => {
   await fetch(`${API}/api/games`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
+    headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
       id: game.id,
       name: game.name,
-      image: game.background_image,
-      watching: false
+      image: game.background_image
     })
   })
 
@@ -55,23 +49,6 @@ const addGame = async (game) => {
   loadGames()
 }
 
-
-// 👀 Gerade am schauen umschalten
-const toggleWatching = async (game) => {
-  await fetch(`${API}/api/games/${game.id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      watching: !game.watching
-    })
-  })
-
-  loadGames()
-}
-
-
 // ❌ löschen
 const deleteGame = async (id) => {
   await fetch(`${API}/api/games/${id}`, {
@@ -81,310 +58,194 @@ const deleteGame = async (id) => {
   loadGames()
 }
 
-
 onMounted(loadGames)
 </script>
 
-
 <template>
+  <h2>🎮 Games</h2>
 
-<h2>🎮 Games</h2>
+  <div class="search-wrapper">
+    <input 
+      v-model="search" 
+      placeholder="Spiel suchen..." 
+      @input="searchGames"
+      @focus="showDropdown = true"
+    />
 
-
-<div class="search-wrapper">
-
-  <input
-    v-model="search"
-    placeholder="Spiel suchen..."
-    @input="searchGames"
-    @focus="showDropdown = true"
-  />
-
-
-  <div 
-    v-if="showDropdown && games.length"
-    class="dropdown"
-  >
-
-    <div
-      v-for="game in games"
-      :key="game.id"
-      class="dropdown-item"
-      @click="addGame(game)"
-    >
-
-      <img :src="game.background_image" />
-
-      <span>
-        {{ game.name }}
-      </span>
-
+    <div v-if="showDropdown && games.length" class="dropdown">
+      <div 
+        v-for="game in games" 
+        :key="game.id" 
+        class="dropdown-item"
+        @click="addGame(game)"
+      >
+        <img :src="game.background_image" />
+        <span>{{ game.name }}</span>
+      </div>
     </div>
-
   </div>
 
-</div>
+  <h2>Meine Games</h2>
 
-
-
-<h2>Meine Games</h2>
-
-
-<div class="games">
-
-  <div
-    v-for="g in myGames"
-    :key="g.id"
-    class="card"
-  >
-
-    <img :src="g.image" />
-
-
-    <h3>
-      {{ g.name }}
-    </h3>
-
-
-    <p 
-      v-if="g.watching"
-      class="watching"
-    >
-      👀 Gerade am schauen
-    </p>
-
-
-    <button
-      class="watch-btn"
-      @click="toggleWatching(g)"
-    >
-      {{ g.watching ? '✅ Schaue ich gerade' : '👀 Gerade am schauen' }}
-    </button>
-
-
-    <button
-      class="delete-btn"
-      @click="deleteGame(g.id)"
-    >
-      ❌ Löschen
-    </button>
-
-
+  <div class="games">
+    <div v-for="g in myGames" :key="g.id" class="card">
+      <img :src="g.image" />
+      <h3>{{ g.name }}</h3>
+      <button @click="deleteGame(g.id)">❌</button>
+    </div>
   </div>
-
-</div>
-
-
 </template>
 
-
 <style>
-
+/* GENERAL */
 body {
   font-family: Arial, sans-serif;
   background:
     linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
-    url('/maxresdefault.jpg') center/cover fixed;
+    url('/maxresdefault.jpg') center/cover no-repeat fixed;
 
   color: #f1f5f9;
   margin: 0;
   padding: 20px;
 }
 
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* NAV */
+nav {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+nav button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  background: #1e293b;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+nav button:hover {
+  background: #3b82f6;
+}
 
 /* SEARCH */
-
 .search-wrapper {
   position: relative;
   width: 500px;
-  margin: auto;
+  margin: 0 auto 30px auto;
 }
-
 
 .search-wrapper input {
-
-  width:100%;
-  padding:14px;
-
-  border-radius:10px;
-  border:none;
-
-  background:#1e293b;
-  color:white;
-
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  background: #1e293b;
+  color: white;
 }
 
+.search-wrapper input::placeholder {
+  color: #94a3b8;
+}
 
 /* DROPDOWN */
-
 .dropdown {
-
-  position:absolute;
-
-  top:110%;
-  width:100%;
-
-  background:#1e293b;
-
-  border-radius:10px;
-
-  z-index:10;
-
+  position: absolute;
+  top: 110%;
+  left: 0;
+  right: 0;
+  background: #1e293b;
+  border-radius: 10px;
+  max-height: 260px;
+  overflow-y: auto;
+  z-index: 10;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 }
-
 
 .dropdown-item {
-
-  display:flex;
-
-  align-items:center;
-
-  gap:12px;
-
-  padding:10px;
-
-  cursor:pointer;
-
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  cursor: pointer;
+  transition: 0.2s;
 }
-
 
 .dropdown-item:hover {
-
-  background:#334155;
-
+  background: #334155;
 }
-
 
 .dropdown-item img {
-
-  width:45px;
-  height:45px;
-
-  object-fit:cover;
-
-  border-radius:6px;
-
+  width: 45px;
+  height: 45px;
+  border-radius: 6px;
+  object-fit: cover;
 }
-
-
 
 /* GRID */
-
 .games {
-
-display:grid;
-
-grid-template-columns:
-repeat(auto-fill,minmax(220px,1fr));
-
-gap:20px;
-
-margin-top:20px;
-
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
 }
-
-
 
 /* CARD */
-
 .card {
-
-background:#1e293b;
-
-padding:12px;
-
-border-radius:12px;
-
-display:flex;
-
-flex-direction:column;
-
-gap:10px;
-
-box-shadow:
-0 8px 20px rgba(0,0,0,.25);
-
+  background: #1e293b;
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: 0.25s;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
 
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+}
 
-
+/* IMAGE */
 .card img {
-
-width:100%;
-
-height:180px;
-
-object-fit:cover;
-
-border-radius:8px;
-
+  width: 100%;
+  height: 180px;
+  border-radius: 8px;
+  object-fit: cover;
 }
 
-
-
+/* TITLE */
 .card h3 {
-
-margin:0;
-
+  font-size: 16px;
+  margin: 0;
 }
 
-
-
-/* WATCHING */
-
-.watching {
-
-color:#22c55e;
-
-font-weight:bold;
-
+/* DELETE BUTTON */
+.card button {
+  margin-top: auto;
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  background: #ef4444;
+  color: white;
+  cursor: pointer;
+  transition: 0.2s;
 }
 
-
-
-/* BUTTONS */
-
-button {
-
-padding:8px;
-
-border:none;
-
-border-radius:6px;
-
-cursor:pointer;
-
-color:white;
-
+.card button:hover {
+  background: #dc2626;
 }
-
-
-.watch-btn {
-
-background:#3b82f6;
-
-}
-
-
-.watch-btn:hover {
-
-background:#2563eb;
-
-}
-
-
-.delete-btn {
-
-background:#ef4444;
-
-}
-
-
-.delete-btn:hover {
-
-background:#dc2626;
-
-}
-
-
 </style>
