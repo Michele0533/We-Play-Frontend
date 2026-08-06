@@ -27,10 +27,14 @@ const showDropdown = ref(false)
 ========================= */
 
 const openedMovie = ref(null)
+
 const showEpisodeModal = ref(false)
 
 const seasons = ref([])
+
 const selectedSeason = ref(1)
+
+
 
 
 
@@ -46,31 +50,46 @@ const searchMovies = async()=>{
     if(!search.value.trim()){
 
         movies.value=[]
+
         return
 
     }
 
 
+
     const res = await fetch(
+
         `https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&query=${search.value}`
+
     )
 
 
     const data = await res.json()
 
 
+
     movies.value =
+
         data.results
+
         .filter(m =>
+
             m.media_type === "movie" ||
+
             m.media_type === "tv"
+
         )
+
         .slice(0,10)
+
 
 
     showDropdown.value=true
 
+
 }
+
+
 
 
 
@@ -88,42 +107,40 @@ const loadMovies = async()=>{
 try{
 
 
-    const res =
-    await fetch(`${API}/api/movies`)
+    const res = await fetch(
+
+        `${API}/api/movies`
+
+    )
 
 
 
-    if(!res.ok){
-
-        console.log("Backend Fehler")
-        return
-
-    }
-
-
-
-    const data =
-    await res.json()
+    const data = await res.json()
 
 
 
     watchlist.value=[]
+
     watching.value=[]
+
     watched.value=[]
+
     rewatch.value=[]
+
 
 
 
     data.forEach(movie=>{
 
 
-        movie.type =
-        movie.type ?? "movie"
+        // Falls alte Daten kein type haben
+
+        movie.type = movie.type ?? "movie"
 
 
 
-        movie.status =
-        movie.status ?? "watchlist"
+        movie.status = movie.status ?? "watchlist"
+
 
 
 
@@ -157,15 +174,21 @@ try{
 }
 catch(err){
 
+
     console.log(
-        "LOAD ERROR:",
+
+        "LOAD ERROR",
+
         err
+
     )
 
+
 }
 
 
 }
+
 
 
 
@@ -182,7 +205,9 @@ const addMovie = async(movie)=>{
 
 
     await fetch(
+
         `${API}/api/movies`,
+
         {
 
 
@@ -190,50 +215,67 @@ const addMovie = async(movie)=>{
 
 
             headers:{
+
                 "Content-Type":"application/json"
+
             },
 
 
             body:JSON.stringify({
 
 
+
                 id:movie.id,
 
 
+
                 name:
+
                 movie.title ||
+
                 movie.name,
 
 
+
                 type:
+
                 movie.media_type,
 
 
 
                 image:
+
                 movie.poster_path
+
                 ?
+
                 `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+
                 :
+
                 "",
 
 
 
-                status:"watchlist",
+                status:"watchlist"
 
 
-                episodes:[]
 
 
             })
 
+
         }
+
+
     )
+
 
 
     resetSearch()
 
-    await loadMovies()
+
+    loadMovies()
 
 
 }
@@ -283,9 +325,11 @@ const updateStatus = async(movie,status)=>{
 
 
 
+
     if(status==="watching")
 
         watching.value.push(movie)
+
 
 
     else if(status==="watched")
@@ -293,9 +337,11 @@ const updateStatus = async(movie,status)=>{
         watched.value.push(movie)
 
 
+
     else if(status==="rewatch")
 
         rewatch.value.push(movie)
+
 
 
     else
@@ -306,8 +352,12 @@ const updateStatus = async(movie,status)=>{
 
 
 
+
+
     await fetch(
+
         `${API}/api/movies/${movie.id}`,
+
         {
 
 
@@ -315,7 +365,9 @@ const updateStatus = async(movie,status)=>{
 
 
             headers:{
+
                 "Content-Type":"application/json"
+
             },
 
 
@@ -325,11 +377,16 @@ const updateStatus = async(movie,status)=>{
 
             })
 
+
         }
+
+
     )
 
 
 }
+
+
 
 
 
@@ -345,16 +402,24 @@ const deleteMovie = async(id)=>{
 
 
     await fetch(
+
         `${API}/api/movies/${id}`,
+
         {
+
             method:"DELETE"
+
         }
+
     )
 
 
     loadMovies()
 
+
 }
+
+
 
 
 
@@ -371,12 +436,16 @@ const resetSearch=()=>{
 
     search.value=""
 
+
     movies.value=[]
+
 
     showDropdown.value=false
 
 
 }
+
+
 
 
 
@@ -392,17 +461,24 @@ const openMovie = async(movie)=>{
 
 
     console.log(
+
         "OPEN MOVIE:",
+
         movie
+
     )
 
 
-    // Nur Serien
+
     if(movie.type !== "tv"){
 
+
         console.log(
+
             "Kein Serienobjekt"
+
         )
+
 
         return
 
@@ -410,15 +486,20 @@ const openMovie = async(movie)=>{
 
 
 
+
+
     openedMovie.value = movie
+
 
 
     showEpisodeModal.value=true
 
 
 
+
     selectedSeason.value =
-    movie.lastSeason ?? 1
+
+        movie.lastSeason ?? 1
 
 
 
@@ -435,6 +516,7 @@ const openMovie = async(movie)=>{
 
 
 
+
 /* =========================
  📺 STAFFELN LADEN
 ========================= */
@@ -442,14 +524,14 @@ const openMovie = async(movie)=>{
 const loadSeasons = async(movie)=>{
 
 
-    const info =
-    await fetch(
+    const info = await fetch(
+
         `https://api.themoviedb.org/3/tv/${movie.id}?api_key=${TMDB_KEY}`
+
     )
 
 
-    const data =
-    await info.json()
+    const data = await info.json()
 
 
 
@@ -459,46 +541,65 @@ const loadSeasons = async(movie)=>{
 
 
     for(
+
         let i=1;
+
         i<=data.number_of_seasons;
+
         i++
+
     ){
 
 
-        const res =
-        await fetch(
+
+        const res = await fetch(
+
             `https://api.themoviedb.org/3/tv/${movie.id}/season/${i}?api_key=${TMDB_KEY}`
+
         )
 
 
-        const seasonData =
-        await res.json()
+
+        const seasonData = await res.json()
+
+
 
 
 
         seasons.value.push({
 
+
             number:i,
+
 
 
             episodes:
 
+
             seasonData.episodes.map(ep=>({
 
 
+
                 number:
+
                 ep.episode_number,
+
 
 
                 watched:
 
                 movie.episodes?.some(e=>
 
+
                     e.season===i &&
+
                     e.episode===ep.episode_number &&
+
                     e.watched
 
+
                 ) ?? false
+
 
 
             }))
@@ -512,174 +613,7 @@ const loadSeasons = async(movie)=>{
 
 }
 
-
-
-
-
-
-
-/* =========================
- 📌 STAFFEL SPEICHERN
-========================= */
-
-const changeSeason = async(season)=>{
-
-
-    selectedSeason.value = season
-
-
-
-    if(!openedMovie.value)
-        return
-
-
-
-    openedMovie.value.lastSeason = season
-
-
-
-    await fetch(
-        `${API}/api/movies/${openedMovie.value.id}/season`,
-        {
-
-
-            method:"PATCH",
-
-
-            headers:{
-                "Content-Type":"application/json"
-            },
-
-
-            body:JSON.stringify({
-
-                lastSeason:season
-
-            })
-
-
-        }
-    )
-
-
-}
-
-
-
-
-
-
-
-
-/* =========================
- ✅ EPISODE TOGGLE
-========================= */
-
-const toggleEpisode = async(season,episode)=>{
-
-
-    episode.watched =
-    !episode.watched
-
-
-
-    await fetch(
-        `${API}/api/movies/${openedMovie.value.id}/episodes`,
-        {
-
-
-            method:"PATCH",
-
-
-            headers:{
-                "Content-Type":"application/json"
-            },
-
-
-            body:JSON.stringify({
-
-                season:season.number,
-
-                episode:episode.number,
-
-                watched:episode.watched
-
-            })
-
-        }
-    )
-
-
-}
-
-
-
-
-
-
-
-/* =========================
- 📊 FORTSCHRITT
-========================= */
-
-const getProgress=(season)=>{
-
-
-    const total =
-    season.episodes.length
-
-
-
-    const done =
-    season.episodes.filter(
-        e=>e.watched
-    ).length
-
-
-
-    return {
-
-        done,
-
-        total,
-
-
-        percent:
-
-        total
-        ?
-        Math.round(done / total * 100)
-        :
-        0
-
-    }
-
-
-}
-
-
-
-
-
-
-const seasonFinished=(season)=>{
-
-
-    return getProgress(season).percent===100
-
-
-}
-
-
-
-
-
-
-onMounted(loadMovies)
-
-</script>
-
-<template>
+ <template>
 
 <h2>🎬 Movies & Serien</h2>
 
@@ -785,26 +719,33 @@ class="movie-image"
 
 
 <h3>
-{{m.name}}
-</h3>
 
+{{m.name}}
+
+</h3>
 
 
 <div class="buttons">
 
 
 <button @click="updateStatus(m,'watching')">
+
 👀
+
 </button>
 
 
 <button @click="updateStatus(m,'watched')">
+
 ✅
+
 </button>
 
 
 <button @click="deleteMovie(m.id)">
+
 ❌
+
 </button>
 
 
@@ -815,6 +756,7 @@ class="movie-image"
 
 
 </div>
+
 
 
 
@@ -855,9 +797,10 @@ class="movie-image"
 />
 
 
-
 <h3>
+
 {{m.name}}
+
 </h3>
 
 
@@ -866,17 +809,23 @@ class="movie-image"
 
 
 <button @click="updateStatus(m,'watched')">
+
 ✅
+
 </button>
 
 
 <button @click="updateStatus(m,'watchlist')">
+
 ↩️
+
 </button>
 
 
 <button @click="deleteMovie(m.id)">
+
 ❌
+
 </button>
 
 
@@ -887,6 +836,7 @@ class="movie-image"
 
 
 </div>
+
 
 
 
@@ -928,9 +878,10 @@ class="movie-image"
 />
 
 
-
 <h3>
+
 {{m.name}}
+
 </h3>
 
 
@@ -939,17 +890,23 @@ class="movie-image"
 
 
 <button @click="updateStatus(m,'rewatch')">
+
 🔄
+
 </button>
 
 
 <button @click="updateStatus(m,'watchlist')">
+
 ↩️
+
 </button>
 
 
 <button @click="deleteMovie(m.id)">
+
 ❌
+
 </button>
 
 
@@ -1002,9 +959,10 @@ class="movie-image"
 />
 
 
-
 <h3>
+
 {{m.name}}
+
 </h3>
 
 
@@ -1013,17 +971,23 @@ class="movie-image"
 
 
 <button @click="updateStatus(m,'watched')">
+
 ✅
+
 </button>
 
 
 <button @click="updateStatus(m,'watchlist')">
+
 ↩️
+
 </button>
 
 
 <button @click="deleteMovie(m.id)">
+
 ❌
+
 </button>
 
 
@@ -1058,7 +1022,6 @@ class="episode-overlay"
 <div class="episode-modal">
 
 
-
 <button
 
 class="close-button"
@@ -1070,7 +1033,6 @@ class="close-button"
 ✖
 
 </button>
-
 
 
 
@@ -1089,6 +1051,8 @@ class="big-poster"
 {{openedMovie.name}}
 
 </h2>
+
+
 
 
 
@@ -1116,9 +1080,7 @@ complete:seasonFinished(season)
 
 >
 
-
 Staffel {{season.number}}
-
 
 </button>
 
@@ -1175,6 +1137,7 @@ Folgen
 
 
 
+
 <div class="episodes">
 
 
@@ -1204,12 +1167,10 @@ watched:episode.watched
 </div>
 
 
-
 </div>
 
 
 </div>
-
 
 
 
@@ -1222,6 +1183,8 @@ watched:episode.watched
 
 
 </template>
+
+
 
 
 
@@ -1270,7 +1233,6 @@ repeat(auto-fill,minmax(220px,1fr));
 gap:20px;
 
 }
-
 
 
 
@@ -1389,11 +1351,15 @@ cursor:pointer;
 
 
 
+
+
 .dropdown-item:hover{
 
 background:#334155;
 
 }
+
+
 
 
 
@@ -1504,6 +1470,7 @@ margin:20px;
 background:#555;
 
 }
+
 
 
 
