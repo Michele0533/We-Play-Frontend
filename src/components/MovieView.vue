@@ -278,13 +278,12 @@ const resetSearch=()=>{
 const openMovie = async(movie)=>{
 
 
-  if(movie.type !== "tv")
-    return
+  console.log("CLICK MOVIE:", movie)
 
 
 
   if(openedMovie.value?.id === movie.id){
-
+ 
     openedMovie.value=null
 
     showEpisodeModal.value=false
@@ -764,8 +763,8 @@ class="card"
 
 <img
 v-if="m.image"
-:src="m.image"
-@click="m.type === 'tv' && openMovie(m)"
+:src="m.image"@click
+@click="openMovie(m)"
 class="movie-image"
 />
 
