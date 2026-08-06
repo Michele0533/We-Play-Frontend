@@ -46,11 +46,9 @@ const searchMovies = async()=>{
     if(!search.value.trim()){
 
         movies.value=[]
-
         return
 
     }
-
 
 
     const res = await fetch(
@@ -59,7 +57,6 @@ const searchMovies = async()=>{
 
 
     const data = await res.json()
-
 
 
     movies.value =
@@ -71,10 +68,10 @@ const searchMovies = async()=>{
         .slice(0,10)
 
 
-
     showDropdown.value=true
 
 }
+
 
 
 
@@ -99,7 +96,6 @@ try{
     if(!res.ok){
 
         console.log("Backend Fehler")
-
         return
 
     }
@@ -121,31 +117,29 @@ try{
     data.forEach(movie=>{
 
 
-        // alte Daten fixen
         movie.type =
         movie.type ?? "movie"
 
 
 
-        const status =
+        movie.status =
         movie.status ?? "watchlist"
 
 
 
-
-        if(status==="watching")
+        if(movie.status==="watching")
 
             watching.value.push(movie)
 
 
 
-        else if(status==="watched")
+        else if(movie.status==="watched")
 
             watched.value.push(movie)
 
 
 
-        else if(status==="rewatch")
+        else if(movie.status==="rewatch")
 
             rewatch.value.push(movie)
 
@@ -160,7 +154,6 @@ try{
     })
 
 
-
 }
 catch(err){
 
@@ -173,6 +166,7 @@ catch(err){
 
 
 }
+
 
 
 
@@ -211,7 +205,6 @@ const addMovie = async(movie)=>{
                 movie.name,
 
 
-
                 type:
                 movie.media_type,
 
@@ -226,7 +219,10 @@ const addMovie = async(movie)=>{
 
 
 
-                status:"watchlist"
+                status:"watchlist",
+
+
+                episodes:[]
 
 
             })
@@ -235,14 +231,15 @@ const addMovie = async(movie)=>{
     )
 
 
-
     resetSearch()
 
-
-    loadMovies()
+    await loadMovies()
 
 
 }
+
+
+
 
 
 
@@ -291,11 +288,9 @@ const updateStatus = async(movie,status)=>{
         watching.value.push(movie)
 
 
-
     else if(status==="watched")
 
         watched.value.push(movie)
-
 
 
     else if(status==="rewatch")
@@ -303,11 +298,9 @@ const updateStatus = async(movie,status)=>{
         rewatch.value.push(movie)
 
 
-
     else
 
         watchlist.value.push(movie)
-
 
 
 
@@ -332,12 +325,12 @@ const updateStatus = async(movie,status)=>{
 
             })
 
-
         }
     )
 
 
 }
+
 
 
 
@@ -354,9 +347,7 @@ const deleteMovie = async(id)=>{
     await fetch(
         `${API}/api/movies/${id}`,
         {
-
             method:"DELETE"
-
         }
     )
 
@@ -372,7 +363,7 @@ const deleteMovie = async(id)=>{
 
 
 /* =========================
- 🔍 RESET
+ 🔍 RESET SEARCH
 ========================= */
 
 const resetSearch=()=>{
@@ -380,14 +371,13 @@ const resetSearch=()=>{
 
     search.value=""
 
-
     movies.value=[]
-
 
     showDropdown.value=false
 
 
 }
+
 
 
 
@@ -402,13 +392,17 @@ const openMovie = async(movie)=>{
 
 
     console.log(
-        "OPEN:",
+        "OPEN MOVIE:",
         movie
     )
 
 
-
+    // Nur Serien
     if(movie.type !== "tv"){
+
+        console.log(
+            "Kein Serienobjekt"
+        )
 
         return
 
@@ -439,6 +433,8 @@ const openMovie = async(movie)=>{
 
 
 
+
+
 /* =========================
  📺 STAFFELN LADEN
 ========================= */
@@ -450,7 +446,6 @@ const loadSeasons = async(movie)=>{
     await fetch(
         `https://api.themoviedb.org/3/tv/${movie.id}?api_key=${TMDB_KEY}`
     )
-
 
 
     const data =
@@ -476,46 +471,34 @@ const loadSeasons = async(movie)=>{
         )
 
 
-
         const seasonData =
         await res.json()
 
 
 
-
         seasons.value.push({
-
 
             number:i,
 
 
-
             episodes:
 
-
             seasonData.episodes.map(ep=>({
-
 
 
                 number:
                 ep.episode_number,
 
 
-
                 watched:
 
                 movie.episodes?.some(e=>
 
-
                     e.season===i &&
-
                     e.episode===ep.episode_number &&
-
                     e.watched
 
-
                 ) ?? false
-
 
 
             }))
@@ -524,11 +507,17 @@ const loadSeasons = async(movie)=>{
         })
 
 
-
     }
 
 
 }
+
+
+
+
+
+
+
 /* =========================
  📌 STAFFEL SPEICHERN
 ========================= */
@@ -553,7 +542,9 @@ const changeSeason = async(season)=>{
         `${API}/api/movies/${openedMovie.value.id}/season`,
         {
 
+
             method:"PATCH",
+
 
             headers:{
                 "Content-Type":"application/json"
@@ -566,11 +557,13 @@ const changeSeason = async(season)=>{
 
             })
 
+
         }
     )
 
 
 }
+
 
 
 
@@ -613,12 +606,12 @@ const toggleEpisode = async(season,episode)=>{
 
             })
 
-
         }
     )
 
 
 }
+
 
 
 
@@ -646,9 +639,7 @@ const getProgress=(season)=>{
 
     return {
 
-
         done,
-
 
         total,
 
@@ -657,12 +648,9 @@ const getProgress=(season)=>{
 
         total
         ?
-        Math.round(
-            done / total * 100
-        )
+        Math.round(done / total * 100)
         :
         0
-
 
     }
 
@@ -674,11 +662,10 @@ const getProgress=(season)=>{
 
 
 
-
 const seasonFinished=(season)=>{
 
 
-    return getProgress(season).percent === 100
+    return getProgress(season).percent===100
 
 
 }
@@ -692,16 +679,9 @@ onMounted(loadMovies)
 
 </script>
 
-
-
-
-
 <template>
 
-
 <h2>🎬 Movies & Serien</h2>
-
-
 
 
 <div class="search-wrapper">
@@ -718,8 +698,6 @@ placeholder="Film oder Serie suchen..."
 @focus="showDropdown=true"
 
 />
-
-
 
 
 
@@ -745,7 +723,6 @@ class="dropdown-item"
 >
 
 
-
 <img
 
 v-if="movie.poster_path"
@@ -755,7 +732,6 @@ v-if="movie.poster_path"
 />
 
 
-
 <span>
 
 {{movie.title || movie.name}}
@@ -763,9 +739,7 @@ v-if="movie.poster_path"
 </span>
 
 
-
 </div>
-
 
 
 </div>
@@ -780,12 +754,10 @@ v-if="movie.poster_path"
 
 <!-- WATCHLIST -->
 
-
 <h2>📋 Watchlist</h2>
 
 
 <div class="games">
-
 
 
 <div
@@ -799,235 +771,16 @@ class="card"
 >
 
 
-
 <img
 
 v-if="m.image"
 
 :src="m.image"
-
-@click="openMovie(m)"
 
 class="movie-image"
-
-/>
-
-
-
-<h3>{{m.name}}</h3>
-
-
-
-
-<div class="buttons">
-
-
-<button
-
-@click="updateStatus(m,'watching')"
-
->
-
-👀
-
-</button>
-
-
-
-<button
-
-@click="updateStatus(m,'watched')"
-
->
-
-✅
-
-</button>
-
-
-
-<button
-
-@click="deleteMovie(m.id)"
-
->
-
-❌
-
-</button>
-
-
-</div>
-
-
-</div>
-
-
-
-</div>
-
-
-
-
-
-<!-- WATCHING -->
-
-
-<h2>👀 Gerade am schauen</h2>
-
-
-<div class="games">
-
-
-
-<div
-
-v-for="m in watching"
-
-:key="m.id"
-
-class="card"
-
->
-
-
-
-<img
-
-v-if="m.image"
-
-:src="m.image"
 
 @click="m.type === 'tv' && openMovie(m)"
 
-class="movie-image"
-
-/>
-
-
-
-<h3>{{m.name}}</h3>
-
-
-
-<div class="buttons">
-
-
-<button
-
-@click="updateStatus(m,'watched')"
-
->
-
-✅
-
-</button>
-
-
-
-<button
-
-@click="updateStatus(m,'watchlist')"
-
->
-
-↩️
-
-</button>
-
-
-
-<button
-
-@click="deleteMovie(m.id)"
-
->
-
-❌
-
-</button>
-
-
-
-</div>
-
-
-
-</div>
-
-
-
-</div>
-<template>
-
-<h2>🎬 Movies & Serien</h2>
-
-
-<div class="search-wrapper">
-
-<input
-v-model="search"
-placeholder="Film oder Serie suchen..."
-@input="searchMovies"
-@focus="showDropdown=true"
-/>
-
-
-
-<div
-v-if="showDropdown && movies.length"
-class="dropdown"
->
-
-
-<div
-v-for="movie in movies"
-:key="movie.id"
-class="dropdown-item"
-@click="addMovie(movie)"
->
-
-
-<img
-v-if="movie.poster_path"
-:src="'https://image.tmdb.org/t/p/w500'+movie.poster_path"
-/>
-
-
-<span>
-{{movie.title || movie.name}}
-</span>
-
-
-</div>
-
-
-</div>
-
-</div>
-
-
-
-
-<!-- WATCHLIST -->
-
-<h2>📋 Watchlist</h2>
-
-
-<div class="games">
-
-<div
-v-for="m in watchlist"
-:key="m.id"
-class="card"
->
-
-
-<img
-v-if="m.image"
-:src="m.image"
-class="movie-image"
-@click="openMovie(m)"
 />
 
 
@@ -1036,23 +789,21 @@ class="movie-image"
 </h3>
 
 
+
 <div class="buttons">
 
 
-<button
-@click="updateStatus(m,'watching')">
+<button @click="updateStatus(m,'watching')">
 👀
 </button>
 
 
-<button
-@click="updateStatus(m,'watched')">
+<button @click="updateStatus(m,'watched')">
 ✅
 </button>
 
 
-<button
-@click="deleteMovie(m.id)">
+<button @click="deleteMovie(m.id)">
 ❌
 </button>
 
@@ -1062,7 +813,9 @@ class="movie-image"
 
 </div>
 
+
 </div>
+
 
 
 
@@ -1071,24 +824,36 @@ class="movie-image"
 
 <!-- WATCHING -->
 
+
 <h2>👀 Gerade am schauen</h2>
 
 
 <div class="games">
 
+
 <div
+
 v-for="m in watching"
+
 :key="m.id"
+
 class="card"
+
 >
 
 
 <img
+
 v-if="m.image"
+
 :src="m.image"
+
 class="movie-image"
-@click="openMovie(m)"
+
+@click="m.type === 'tv' && openMovie(m)"
+
 />
+
 
 
 <h3>
@@ -1096,23 +861,21 @@ class="movie-image"
 </h3>
 
 
+
 <div class="buttons">
 
 
-<button
-@click="updateStatus(m,'watched')">
+<button @click="updateStatus(m,'watched')">
 ✅
 </button>
 
 
-<button
-@click="updateStatus(m,'watchlist')">
+<button @click="updateStatus(m,'watchlist')">
 ↩️
 </button>
 
 
-<button
-@click="deleteMovie(m.id)">
+<button @click="deleteMovie(m.id)">
 ❌
 </button>
 
@@ -1122,7 +885,9 @@ class="movie-image"
 
 </div>
 
+
 </div>
+
 
 
 
@@ -1132,24 +897,36 @@ class="movie-image"
 
 <!-- WATCHED -->
 
+
 <h2>✅ Gesehen</h2>
 
 
 <div class="games">
 
+
 <div
+
 v-for="m in watched"
+
 :key="m.id"
+
 class="card"
+
 >
 
 
 <img
+
 v-if="m.image"
+
 :src="m.image"
+
 class="movie-image"
-@click="openMovie(m)"
+
+@click="m.type === 'tv' && openMovie(m)"
+
 />
+
 
 
 <h3>
@@ -1157,23 +934,21 @@ class="movie-image"
 </h3>
 
 
+
 <div class="buttons">
 
 
-<button
-@click="updateStatus(m,'rewatch')">
+<button @click="updateStatus(m,'rewatch')">
 🔄
 </button>
 
 
-<button
-@click="updateStatus(m,'watchlist')">
+<button @click="updateStatus(m,'watchlist')">
 ↩️
 </button>
 
 
-<button
-@click="deleteMovie(m.id)">
+<button @click="deleteMovie(m.id)">
 ❌
 </button>
 
@@ -1183,7 +958,10 @@ class="movie-image"
 
 </div>
 
+
 </div>
+
+
 
 
 
@@ -1193,6 +971,7 @@ class="movie-image"
 
 <!-- REWATCH -->
 
+
 <h2>🔄 Rewatch</h2>
 
 
@@ -1200,18 +979,28 @@ class="movie-image"
 
 
 <div
+
 v-for="m in rewatch"
+
 :key="m.id"
+
 class="card"
+
 >
 
 
 <img
+
 v-if="m.image"
+
 :src="m.image"
+
 class="movie-image"
-@click="openMovie(m)"
+
+@click="m.type === 'tv' && openMovie(m)"
+
 />
+
 
 
 <h3>
@@ -1219,23 +1008,21 @@ class="movie-image"
 </h3>
 
 
+
 <div class="buttons">
 
 
-<button
-@click="updateStatus(m,'watched')">
+<button @click="updateStatus(m,'watched')">
 ✅
 </button>
 
 
-<button
-@click="updateStatus(m,'watchlist')">
+<button @click="updateStatus(m,'watchlist')">
 ↩️
 </button>
 
 
-<button
-@click="deleteMovie(m.id)">
+<button @click="deleteMovie(m.id)">
 ❌
 </button>
 
@@ -1260,31 +1047,49 @@ class="movie-image"
 
 
 <div
+
 v-if="showEpisodeModal && openedMovie"
+
 class="episode-overlay"
+
 >
 
 
 <div class="episode-modal">
 
 
+
 <button
+
 class="close-button"
-@click="showEpisodeModal=false">
+
+@click="showEpisodeModal=false"
+
+>
+
 ✖
+
 </button>
 
 
 
+
 <img
+
 :src="openedMovie.image"
+
 class="big-poster"
+
 />
 
 
+
 <h2>
+
 {{openedMovie.name}}
+
 </h2>
+
 
 
 
@@ -1294,16 +1099,26 @@ class="big-poster"
 
 
 <button
+
 v-for="season in seasons"
+
 :key="season.number"
+
 @click="changeSeason(season.number)"
+
 :class="{
+
 active:selectedSeason===season.number,
+
 complete:seasonFinished(season)
+
 }"
+
 >
 
+
 Staffel {{season.number}}
+
 
 </button>
 
@@ -1314,29 +1129,42 @@ Staffel {{season.number}}
 
 
 
+
+
 <div
+
 v-for="season in seasons"
+
 :key="season.number"
+
 >
 
 
 <div
+
 v-if="selectedSeason===season.number"
+
 >
 
 
 <h3>
+
 Staffel {{season.number}}
+
 </h3>
+
 
 
 <p>
 
 {{getProgress(season).done}}
+
 /
+
 {{getProgress(season).total}}
 
 Folgen
+
 
 ({{getProgress(season).percent}}%)
 
@@ -1345,19 +1173,30 @@ Folgen
 
 
 
+
+
 <div class="episodes">
 
 
 <button
+
 v-for="episode in season.episodes"
+
 :key="episode.number"
+
 @click="toggleEpisode(season,episode)"
+
 :class="{
+
 watched:episode.watched
+
 }"
+
 >
 
+
 {{episode.number}}
+
 
 </button>
 
@@ -1373,13 +1212,18 @@ watched:episode.watched
 
 
 
+
+
 </div>
 
 
 </div>
+
 
 
 </template>
+
+
 
 
 
@@ -1405,6 +1249,7 @@ transition:.2s;
 }
 
 
+
 .movie-image:hover{
 
 transform:scale(1.05);
@@ -1413,16 +1258,20 @@ transform:scale(1.05);
 
 
 
+
 .games{
 
 display:grid;
 
 grid-template-columns:
+
 repeat(auto-fill,minmax(220px,1fr));
 
 gap:20px;
 
 }
+
+
 
 
 
@@ -1440,6 +1289,8 @@ color:white;
 
 
 
+
+
 .buttons{
 
 display:flex;
@@ -1449,6 +1300,9 @@ gap:10px;
 margin-top:10px;
 
 }
+
+
+
 
 
 button{
@@ -1482,6 +1336,9 @@ margin:auto;
 }
 
 
+
+
+
 .search-wrapper input{
 
 width:100%;
@@ -1513,6 +1370,8 @@ width:100%;
 z-index:20;
 
 }
+
+
 
 
 
@@ -1551,6 +1410,7 @@ object-fit:cover;
 
 
 
+
 .episode-overlay{
 
 position:fixed;
@@ -1568,6 +1428,8 @@ justify-content:center;
 z-index:1000;
 
 }
+
+
 
 
 
@@ -1595,6 +1457,8 @@ text-align:center;
 
 
 
+
+
 .big-poster{
 
 width:250px;
@@ -1605,11 +1469,15 @@ border-radius:15px;
 
 
 
+
+
 .close-button{
 
 float:right;
 
 }
+
+
 
 
 
@@ -1629,11 +1497,14 @@ margin:20px;
 
 
 
+
+
 .season-buttons button{
 
 background:#555;
 
 }
+
 
 
 
@@ -1645,11 +1516,15 @@ outline:3px solid white;
 
 
 
+
+
 .season-buttons .complete{
 
 border:3px solid #00ff66;
 
 }
+
+
 
 
 
@@ -1667,6 +1542,8 @@ justify-content:center;
 
 
 
+
+
 .episodes button{
 
 width:45px;
@@ -1677,12 +1554,13 @@ height:45px;
 
 
 
+
+
 .episodes .watched{
 
 background:#00b84f;
 
 }
-
 
 
 </style>
