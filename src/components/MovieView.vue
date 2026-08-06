@@ -806,7 +806,7 @@ v-if="m.image"
 
 :src="m.image"
 
-@click="m.type === 'tv' && openMovie(m)"
+@click="openMovie(m)"
 
 class="movie-image"
 
