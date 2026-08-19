@@ -22,44 +22,43 @@ const watched = ref([])
 const rewatch = ref([])
 
 /* =========================
-   🎬 EPISODEN TRACKER
-========================= */
-
-const openedMovie = ref(null)
-const showEpisodeModal = ref(false)
-
-const seasons = ref([])
-const selectedSeason = ref(1)
-
-/* =========================
    👤 WATCHER
 ========================= */
 
 const showWatcherModal = ref(false)
 
-const pendingMovie = ref(null)
-const pendingStatus = ref(null)
+const watcherMovie = ref(null)
+const pendingNewMovie = ref(null)
 
 const watcherOptions = [
     {
         id: "micky",
         name: "Micky",
-        color: "#3b82f6",
         flag: "🔵"
     },
     {
         id: "tina",
         name: "Tina",
-        color: "#ec4899",
         flag: "🩷"
     },
     {
         id: "gemeinsam",
         name: "Gemeinsam",
-        color: "#166534",
         flag: "🟢"
     }
 ]
+
+/* =========================
+   🎬 EPISODEN TRACKER
+========================= */
+
+const openedMovie = ref(null)
+
+const showEpisodeModal = ref(false)
+
+const seasons = ref([])
+
+const selectedSeason = ref(1)
 
 /* =========================
    🔍 TMDB SEARCH
@@ -68,8 +67,11 @@ const watcherOptions = [
 const searchMovies = async () => {
 
     if (!search.value.trim()) {
+
         movies.value = []
+
         showDropdown.value = false
+
         return
     }
 
@@ -81,18 +83,22 @@ const searchMovies = async () => {
 
         const data = await res.json()
 
-        movies.value = data.results
-            .filter(m =>
-                m.media_type === "movie" ||
-                m.media_type === "tv"
-            )
-            .slice(0, 10)
+        movies.value =
+            data.results
+                .filter(m =>
+                    m.media_type === "movie" ||
+                    m.media_type === "tv"
+                )
+                .slice(0, 10)
 
         showDropdown.value = true
 
     } catch (err) {
 
-        console.log("SEARCH ERROR", err)
+        console.log(
+            "SEARCH ERROR",
+            err
+        )
 
     }
 }
@@ -118,21 +124,36 @@ const loadMovies = async () => {
 
         data.forEach(movie => {
 
-            // Alte Daten absichern
-            movie.type = movie.type ?? "movie"
-            movie.status = movie.status ?? "watchlist"
-            movie.watcher = movie.watcher ?? null
-            movie.episodes = movie.episodes ?? []
+            movie.type =
+                movie.type ?? "movie"
 
-            if (movie.status === "watching") {
+            movie.status =
+                movie.status ?? "watchlist"
+
+            movie.watcher =
+                movie.watcher ?? null
+
+            movie.episodes =
+                movie.episodes ?? []
+
+            movie.lastSeason =
+                movie.lastSeason ?? 1
+
+            if (
+                movie.status === "watching"
+            ) {
 
                 watching.value.push(movie)
 
-            } else if (movie.status === "watched") {
+            } else if (
+                movie.status === "watched"
+            ) {
 
                 watched.value.push(movie)
 
-            } else if (movie.status === "rewatch") {
+            } else if (
+                movie.status === "rewatch"
+            ) {
 
                 rewatch.value.push(movie)
 
@@ -155,10 +176,47 @@ const loadMovies = async () => {
 }
 
 /* =========================
-   ➕ ADD MOVIE
+   ➕ ADD MOVIE / SERIE
 ========================= */
 
 const addMovie = async (movie) => {
+
+    /*
+     * FILM
+     * Direkt hinzufügen wie vorher
+     */
+
+    if (movie.media_type === "movie") {
+
+        await saveNewMovie(
+            movie,
+            null
+        )
+
+        return
+    }
+
+
+    /*
+     * SERIE
+     * Erst Zuschauer auswählen
+     */
+
+    pendingNewMovie.value = movie
+
+    watcherMovie.value = null
+
+    showWatcherModal.value = true
+}
+
+/* =========================
+   💾 NEUES ELEMENT SPEICHERN
+========================= */
+
+const saveNewMovie = async (
+    movie,
+    watcher
+) => {
 
     try {
 
@@ -168,7 +226,8 @@ const addMovie = async (movie) => {
                 method: "POST",
 
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type":
+                        "application/json"
                 },
 
                 body: JSON.stringify({
@@ -187,13 +246,17 @@ const addMovie = async (movie) => {
                             ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
                             : "",
 
-                    status: "watchlist",
+                    status:
+                        "watchlist",
 
-                    watcher: null,
+                    watcher:
+                        watcher,
 
-                    episodes: [],
+                    episodes:
+                        [],
 
-                    lastSeason: 1
+                    lastSeason:
+                        1
 
                 })
             }
@@ -214,46 +277,218 @@ const addMovie = async (movie) => {
 }
 
 /* =========================
-   🔄 STATUS ÄNDERN
+   👤 WATCHER AUSWÄHLEN
 ========================= */
 
-const updateStatus = async (movie, status) => {
+const selectWatcher = async (watcher) => {
 
     /*
-     * Bei Serien zuerst fragen,
-     * wer die Serie schaut.
+     * NEUE SERIE
      */
 
-    if (movie.type === "tv") {
+    if (pendingNewMovie.value) {
 
-        pendingMovie.value = movie
-        pendingStatus.value = status
+        const movie =
+            pendingNewMovie.value
 
-        showWatcherModal.value = true
+        pendingNewMovie.value = null
+
+        showWatcherModal.value = false
+
+        await saveNewMovie(
+            movie,
+            watcher
+        )
 
         return
     }
 
+
     /*
-     * Normale Filme direkt verschieben
+     * BEREITS VORHANDENE SERIE
      */
 
-    await performStatusChange(
-        movie,
-        status
-    )
+    if (watcherMovie.value) {
+
+        const movie =
+            watcherMovie.value
+
+        movie.watcher =
+            watcher
+
+        watcherMovie.value = null
+
+        showWatcherModal.value = false
+
+        await saveWatcher(
+            movie
+        )
+
+        return
+    }
+
+    showWatcherModal.value = false
 }
 
 /* =========================
-   🔄 STATUS SPEICHERN
+   👤 WATCHER ÄNDERN
 ========================= */
 
-const performStatusChange = async (
+const changeWatcher = (movie) => {
+
+    /*
+     * Nur Serien
+     */
+
+    if (movie.type !== "tv") {
+        return
+    }
+
+    watcherMovie.value = movie
+
+    pendingNewMovie.value = null
+
+    showWatcherModal.value = true
+}
+
+/* =========================
+   💾 WATCHER SPEICHERN
+========================= */
+
+const saveWatcher = async (movie) => {
+
+    try {
+
+        await fetch(
+            `${API}/api/movies/${movie.id}`,
+            {
+                method: "PATCH",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    watcher:
+                        movie.watcher
+
+                })
+            }
+        )
+
+    } catch (err) {
+
+        console.log(
+            "WATCHER ERROR",
+            err
+        )
+
+    }
+}
+
+/* =========================
+   👤 WATCHER CLASS
+========================= */
+
+const getWatcherClass = (movie) => {
+
+    if (
+        movie.type !== "tv" ||
+        !movie.watcher
+    ) {
+
+        return ""
+
+    }
+
+    return `watcher-${movie.watcher}`
+}
+
+/* =========================
+   👤 WATCHER FLAG
+========================= */
+
+const getWatcherFlag = (movie) => {
+
+    if (
+        movie.watcher === "micky"
+    ) {
+
+        return "🔵"
+
+    }
+
+    if (
+        movie.watcher === "tina"
+    ) {
+
+        return "🩷"
+
+    }
+
+    if (
+        movie.watcher === "gemeinsam"
+    ) {
+
+        return "🟢"
+
+    }
+
+    return "👤"
+}
+
+/* =========================
+   👤 WATCHER NAME
+========================= */
+
+const getWatcherName = (movie) => {
+
+    if (
+        movie.watcher === "micky"
+    ) {
+
+        return "Micky"
+
+    }
+
+    if (
+        movie.watcher === "tina"
+    ) {
+
+        return "Tina"
+
+    }
+
+    if (
+        movie.watcher === "gemeinsam"
+    ) {
+
+        return "Gemeinsam"
+
+    }
+
+    return "Wer schaut das?"
+}
+
+/* =========================
+   🔄 STATUS ÄNDERN
+========================= */
+
+const updateStatus = async (
     movie,
     status
 ) => {
 
+    /*
+     * KEINE WATCHER-ABFRAGE
+     *
+     * Egal ob Film oder Serie.
+     */
+
     movie.status = status
+
 
     /*
      * Aus allen Listen entfernen
@@ -279,19 +514,26 @@ const performStatusChange = async (
             m => m.id !== movie.id
         )
 
+
     /*
-     * In richtige Liste verschieben
+     * In richtige Liste
      */
 
-    if (status === "watching") {
+    if (
+        status === "watching"
+    ) {
 
         watching.value.push(movie)
 
-    } else if (status === "watched") {
+    } else if (
+        status === "watched"
+    ) {
 
         watched.value.push(movie)
 
-    } else if (status === "rewatch") {
+    } else if (
+        status === "rewatch"
+    ) {
 
         rewatch.value.push(movie)
 
@@ -300,6 +542,7 @@ const performStatusChange = async (
         watchlist.value.push(movie)
 
     }
+
 
     /*
      * Backend
@@ -313,12 +556,14 @@ const performStatusChange = async (
                 method: "PATCH",
 
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type":
+                        "application/json"
                 },
 
                 body: JSON.stringify({
 
-                    status: status,
+                    status:
+                        status,
 
                     watcher:
                         movie.watcher ?? null
@@ -335,81 +580,6 @@ const performStatusChange = async (
         )
 
     }
-}
-
-/* =========================
-   👤 WATCHER AUSWÄHLEN
-========================= */
-
-const selectWatcher = async (watcher) => {
-
-    if (!pendingMovie.value) {
-        return
-    }
-
-    const movie =
-        pendingMovie.value
-
-    const status =
-        pendingStatus.value
-
-    /*
-     * Person speichern
-     */
-
-    movie.watcher = watcher
-
-    /*
-     * Modal schließen
-     */
-
-    showWatcherModal.value = false
-
-    pendingMovie.value = null
-    pendingStatus.value = null
-
-    /*
-     * Status ändern
-     */
-
-    await performStatusChange(
-        movie,
-        status
-    )
-}
-
-/* =========================
-   👤 WATCHER CLASS
-========================= */
-
-const getWatcherClass = (movie) => {
-
-    if (!movie.watcher) {
-        return ""
-    }
-
-    return `watcher-${movie.watcher}`
-}
-
-/* =========================
-   👤 WATCHER FLAG
-========================= */
-
-const getWatcherFlag = (movie) => {
-
-    if (movie.watcher === "micky") {
-        return "🔵"
-    }
-
-    if (movie.watcher === "tina") {
-        return "🩷"
-    }
-
-    if (movie.watcher === "gemeinsam") {
-        return "🟢"
-    }
-
-    return ""
 }
 
 /* =========================
@@ -458,28 +628,26 @@ const resetSearch = () => {
 
 const openMovie = async (movie) => {
 
-    console.log(
-        "OPEN MOVIE:",
-        movie
-    )
-
-    if (movie.type !== "tv") {
-
-        console.log(
-            "Kein Serienobjekt"
-        )
+    if (
+        movie.type !== "tv"
+    ) {
 
         return
+
     }
 
-    openedMovie.value = movie
+    openedMovie.value =
+        movie
 
-    showEpisodeModal.value = true
+    showEpisodeModal.value =
+        true
 
     selectedSeason.value =
         movie.lastSeason ?? 1
 
-    await loadSeasons(movie)
+    await loadSeasons(
+        movie
+    )
 }
 
 /* =========================
@@ -490,17 +658,15 @@ const loadSeasons = async (movie) => {
 
     try {
 
-        const info = await fetch(
-            `https://api.themoviedb.org/3/tv/${movie.id}?api_key=${TMDB_KEY}`
-        )
+        const info =
+            await fetch(
+                `https://api.themoviedb.org/3/tv/${movie.id}?api_key=${TMDB_KEY}`
+            )
 
-        const data = await info.json()
+        const data =
+            await info.json()
 
         seasons.value = []
-
-        /*
-         * Staffeln laden
-         */
 
         for (
             let i = 1;
@@ -508,34 +674,39 @@ const loadSeasons = async (movie) => {
             i++
         ) {
 
-            const res = await fetch(
-                `https://api.themoviedb.org/3/tv/${movie.id}/season/${i}?api_key=${TMDB_KEY}`
-            )
+            const res =
+                await fetch(
+                    `https://api.themoviedb.org/3/tv/${movie.id}/season/${i}?api_key=${TMDB_KEY}`
+                )
 
             const seasonData =
                 await res.json()
 
             seasons.value.push({
 
-                number: i,
+                number:
+                    i,
 
                 episodes:
-                    seasonData.episodes.map(ep => ({
+                    seasonData.episodes.map(
+                        ep => ({
 
-                        number:
-                            ep.episode_number,
+                            number:
+                                ep.episode_number,
 
-                        watched:
-                            movie.episodes?.some(
-                                e =>
-                                    e.season === i &&
-                                    e.episode === ep.episode_number &&
-                                    e.watched
-                            ) ?? false
+                            watched:
+                                movie.episodes?.some(
+                                    e =>
+                                        e.season === i &&
+                                        e.episode === ep.episode_number &&
+                                        e.watched
+                                ) ?? false
 
-                    }))
+                        })
+                    )
 
             })
+
         }
 
     } catch (err) {
@@ -552,23 +723,30 @@ const loadSeasons = async (movie) => {
    📺 STAFFEL WECHSELN
 ========================= */
 
-const changeSeason = (seasonNumber) => {
+const changeSeason = (
+    seasonNumber
+) => {
 
     selectedSeason.value =
         seasonNumber
 
-    if (openedMovie.value) {
+    if (
+        openedMovie.value
+    ) {
 
         openedMovie.value.lastSeason =
             seasonNumber
+
     }
 }
 
 /* =========================
-   📊 FORTSCHRITT
+   📊 PROGRESS
 ========================= */
 
-const getProgress = (season) => {
+const getProgress = (
+    season
+) => {
 
     const total =
         season.episodes.length
@@ -586,20 +764,28 @@ const getProgress = (season) => {
             : 0
 
     return {
+
         done,
         total,
         percent
+
     }
 }
 
 /* =========================
-   ✅ STAFFEL FERTIG?
+   ✅ STAFFEL FERTIG
 ========================= */
 
-const seasonFinished = (season) => {
+const seasonFinished = (
+    season
+) => {
 
-    if (!season.episodes.length) {
+    if (
+        !season.episodes.length
+    ) {
+
         return false
+
     }
 
     return season.episodes.every(
@@ -619,13 +805,20 @@ const toggleEpisode = async (
     episode.watched =
         !episode.watched
 
-    if (!openedMovie.value) {
+    if (
+        !openedMovie.value
+    ) {
+
         return
+
     }
 
-    if (!openedMovie.value.episodes) {
+    if (
+        !openedMovie.value.episodes
+    ) {
 
-        openedMovie.value.episodes = []
+        openedMovie.value.episodes =
+            []
 
     }
 
@@ -658,18 +851,11 @@ const toggleEpisode = async (
                 episode.watched
 
         })
-    }
 
-    /*
-     * Aktuelle Staffel speichern
-     */
+    }
 
     openedMovie.value.lastSeason =
         season.number
-
-    /*
-     * Backend aktualisieren
-     */
 
     try {
 
@@ -719,662 +905,740 @@ onMounted(() => {
 
 <template>
 
-    <!-- =========================
-         🎬 TITEL
-    ========================= -->
+<!-- =========================
+     🎬 MOVIES & SERIEN
+========================= -->
 
-    <h2>
-        🎬 Movies & Serien
-    </h2>
+<h2>
+    🎬 Movies & Serien
+</h2>
 
 
-    <!-- =========================
-         🔍 SEARCH
-    ========================= -->
+<!-- =========================
+     🔍 SEARCH
+========================= -->
 
-    <div class="search-wrapper">
+<div class="search-wrapper">
 
-        <input
-            v-model="search"
-            placeholder="Film oder Serie suchen..."
-            @input="searchMovies"
-            @focus="showDropdown = true"
-        />
+    <input
+        v-model="search"
+        placeholder="Film oder Serie suchen..."
+        @input="searchMovies"
+        @focus="showDropdown = true"
+    />
 
-
-        <div
-            v-if="showDropdown && movies.length"
-            class="dropdown"
-        >
-
-            <div
-                v-for="movie in movies"
-                :key="movie.id"
-                class="dropdown-item"
-                @click="addMovie(movie)"
-            >
-
-                <img
-                    v-if="movie.poster_path"
-                    :src="
-                        'https://image.tmdb.org/t/p/w500'
-                        + movie.poster_path
-                    "
-                />
-
-                <span>
-                    {{ movie.title || movie.name }}
-                </span>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- =========================
-         📋 WATCHLIST
-    ========================= -->
-
-    <h2>
-        📋 Watchlist
-    </h2>
-
-
-    <div class="games">
-
-        <div
-            v-for="m in watchlist"
-            :key="m.id"
-            class="card"
-            :class="getWatcherClass(m)"
-        >
-
-            <div class="poster-wrapper">
-
-                <img
-                    v-if="m.image"
-                    :src="m.image"
-                    class="movie-image"
-                    @click="
-                        m.type === 'tv'
-                            && openMovie(m)
-                    "
-                />
-
-                <div
-                    v-if="
-                        m.type === 'tv'
-                        && m.watcher
-                    "
-                    class="watcher-flag"
-                    :class="m.watcher"
-                >
-                    {{ getWatcherFlag(m) }}
-                </div>
-
-            </div>
-
-
-            <h3>
-                {{ m.name }}
-            </h3>
-
-
-            <div class="buttons">
-
-                <button
-                    @click="
-                        updateStatus(
-                            m,
-                            'watching'
-                        )
-                    "
-                >
-                    👀
-                </button>
-
-
-                <button
-                    @click="
-                        updateStatus(
-                            m,
-                            'watched'
-                        )
-                    "
-                >
-                    ✅
-                </button>
-
-
-                <button
-                    @click="
-                        deleteMovie(m.id)
-                    "
-                >
-                    ❌
-                </button>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- =========================
-         👀 WATCHING
-    ========================= -->
-
-    <h2>
-        👀 Gerade am schauen
-    </h2>
-
-
-    <div class="games">
-
-        <div
-            v-for="m in watching"
-            :key="m.id"
-            class="card"
-            :class="getWatcherClass(m)"
-        >
-
-            <div class="poster-wrapper">
-
-                <img
-                    v-if="m.image"
-                    :src="m.image"
-                    class="movie-image"
-                    @click="
-                        m.type === 'tv'
-                            && openMovie(m)
-                    "
-                />
-
-                <div
-                    v-if="
-                        m.type === 'tv'
-                        && m.watcher
-                    "
-                    class="watcher-flag"
-                    :class="m.watcher"
-                >
-                    {{ getWatcherFlag(m) }}
-                </div>
-
-            </div>
-
-
-            <h3>
-                {{ m.name }}
-            </h3>
-
-
-            <div class="buttons">
-
-                <button
-                    @click="
-                        updateStatus(
-                            m,
-                            'watched'
-                        )
-                    "
-                >
-                    ✅
-                </button>
-
-
-                <button
-                    @click="
-                        updateStatus(
-                            m,
-                            'watchlist'
-                        )
-                    "
-                >
-                    ↩️
-                </button>
-
-
-                <button
-                    @click="
-                        deleteMovie(m.id)
-                    "
-                >
-                    ❌
-                </button>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- =========================
-         ✅ WATCHED
-    ========================= -->
-
-    <h2>
-        ✅ Gesehen
-    </h2>
-
-
-    <div class="games">
-
-        <div
-            v-for="m in watched"
-            :key="m.id"
-            class="card"
-            :class="getWatcherClass(m)"
-        >
-
-            <div class="poster-wrapper">
-
-                <img
-                    v-if="m.image"
-                    :src="m.image"
-                    class="movie-image"
-                    @click="
-                        m.type === 'tv'
-                            && openMovie(m)
-                    "
-                />
-
-                <div
-                    v-if="
-                        m.type === 'tv'
-                        && m.watcher
-                    "
-                    class="watcher-flag"
-                    :class="m.watcher"
-                >
-                    {{ getWatcherFlag(m) }}
-                </div>
-
-            </div>
-
-
-            <h3>
-                {{ m.name }}
-            </h3>
-
-
-            <div class="buttons">
-
-                <button
-                    @click="
-                        updateStatus(
-                            m,
-                            'rewatch'
-                        )
-                    "
-                >
-                    🔄
-                </button>
-
-
-                <button
-                    @click="
-                        updateStatus(
-                            m,
-                            'watchlist'
-                        )
-                    "
-                >
-                    ↩️
-                </button>
-
-
-                <button
-                    @click="
-                        deleteMovie(m.id)
-                    "
-                >
-                    ❌
-                </button>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- =========================
-         🔄 REWATCH
-    ========================= -->
-
-    <h2>
-        🔄 Rewatch
-    </h2>
-
-
-    <div class="games">
-
-        <div
-            v-for="m in rewatch"
-            :key="m.id"
-            class="card"
-            :class="getWatcherClass(m)"
-        >
-
-            <div class="poster-wrapper">
-
-                <img
-                    v-if="m.image"
-                    :src="m.image"
-                    class="movie-image"
-                    @click="
-                        m.type === 'tv'
-                            && openMovie(m)
-                    "
-                />
-
-                <div
-                    v-if="
-                        m.type === 'tv'
-                        && m.watcher
-                    "
-                    class="watcher-flag"
-                    :class="m.watcher"
-                >
-                    {{ getWatcherFlag(m) }}
-                </div>
-
-            </div>
-
-
-            <h3>
-                {{ m.name }}
-            </h3>
-
-
-            <div class="buttons">
-
-                <button
-                    @click="
-                        updateStatus(
-                            m,
-                            'watched'
-                        )
-                    "
-                >
-                    ✅
-                </button>
-
-
-                <button
-                    @click="
-                        updateStatus(
-                            m,
-                            'watchlist'
-                        )
-                    "
-                >
-                    ↩️
-                </button>
-
-
-                <button
-                    @click="
-                        deleteMovie(m.id)
-                    "
-                >
-                    ❌
-                </button>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- =========================
-         👤 WER SCHAUT?
-    ========================= -->
-
-    <div
-        v-if="showWatcherModal"
-        class="watcher-overlay"
-    >
-
-        <div class="watcher-modal">
-
-            <h2>
-                Wer schaut das?
-            </h2>
-
-
-            <div class="watcher-buttons">
-
-                <button
-                    class="watcher-button micky"
-                    @click="
-                        selectWatcher('micky')
-                    "
-                >
-
-                    🔵
-
-                    <span>
-                        Micky
-                    </span>
-
-                </button>
-
-
-                <button
-                    class="watcher-button tina"
-                    @click="
-                        selectWatcher('tina')
-                    "
-                >
-
-                    🩷
-
-                    <span>
-                        Tina
-                    </span>
-
-                </button>
-
-
-                <button
-                    class="watcher-button gemeinsam"
-                    @click="
-                        selectWatcher(
-                            'gemeinsam'
-                        )
-                    "
-                >
-
-                    🟢
-
-                    <span>
-                        Gemeinsam
-                    </span>
-
-                </button>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- =========================
-         🎬 EPISODEN MODAL
-    ========================= -->
 
     <div
         v-if="
-            showEpisodeModal
-            && openedMovie
+            showDropdown &&
+            movies.length
         "
-        class="episode-overlay"
+        class="dropdown"
     >
 
-        <div class="episode-modal">
-
-            <button
-                class="close-button"
-                @click="
-                    showEpisodeModal = false
-                "
-            >
-                ✖
-            </button>
-
+        <div
+            v-for="movie in movies"
+            :key="movie.id"
+            class="dropdown-item"
+            @click="addMovie(movie)"
+        >
 
             <img
-                :src="openedMovie.image"
-                class="big-poster"
+                v-if="movie.poster_path"
+                :src="
+                    'https://image.tmdb.org/t/p/w500'
+                    + movie.poster_path
+                "
+            />
+
+            <span>
+
+                {{
+                    movie.title ||
+                    movie.name
+                }}
+
+            </span>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     📋 WATCHLIST
+========================= -->
+
+<h2>
+    📋 Watchlist
+</h2>
+
+
+<div class="games">
+
+    <div
+        v-for="m in watchlist"
+        :key="m.id"
+        class="card"
+        :class="
+            getWatcherClass(m)
+        "
+    >
+
+        <div class="poster-wrapper">
+
+            <img
+                v-if="m.image"
+                :src="m.image"
+                class="movie-image"
+                @click="
+                    m.type === 'tv'
+                    && openMovie(m)
+                "
             />
 
 
-            <h2>
-                {{ openedMovie.name }}
-            </h2>
+            <!-- WATCHER BUTTON -->
 
-
-            <!-- WATCHER INFO -->
-
-            <div
-                v-if="openedMovie.watcher"
-                class="modal-watcher"
-                :class="
-                    `modal-${openedMovie.watcher}`
+            <button
+                v-if="
+                    m.type === 'tv'
+                "
+                class="watcher-button-small"
+                @click.stop="
+                    changeWatcher(m)
+                "
+                :title="
+                    getWatcherName(m)
                 "
             >
 
-                {{ getWatcherFlag(openedMovie) }}
-
                 {{
-                    openedMovie.watcher === 'micky'
-                        ? 'Micky'
-                        : openedMovie.watcher === 'tina'
-                            ? 'Tina'
-                            : 'Gemeinsam'
+                    getWatcherFlag(m)
                 }}
 
-            </div>
+            </button>
+
+        </div>
 
 
-            <!-- STAFFELN -->
-
-            <div class="season-buttons">
-
-                <button
-                    v-for="season in seasons"
-                    :key="season.number"
-                    @click="
-                        changeSeason(
-                            season.number
-                        )
-                    "
-                    :class="{
-                        active:
-                            selectedSeason
-                            === season.number,
-
-                        complete:
-                            seasonFinished(
-                                season
-                            )
-                    }"
-                >
-
-                    Staffel
-                    {{ season.number }}
-
-                </button>
-
-            </div>
+        <h3>
+            {{ m.name }}
+        </h3>
 
 
-            <!-- EPISODEN -->
+        <div class="buttons">
 
-            <div
-                v-for="season in seasons"
-                :key="season.number"
+            <button
+                @click="
+                    updateStatus(
+                        m,
+                        'watching'
+                    )
+                "
+            >
+                👀
+            </button>
+
+
+            <button
+                @click="
+                    updateStatus(
+                        m,
+                        'watched'
+                    )
+                "
+            >
+                ✅
+            </button>
+
+
+            <button
+                @click="
+                    deleteMovie(m.id)
+                "
+            >
+                ❌
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     👀 WATCHING
+========================= -->
+
+<h2>
+    👀 Gerade am schauen
+</h2>
+
+
+<div class="games">
+
+    <div
+        v-for="m in watching"
+        :key="m.id"
+        class="card"
+        :class="
+            getWatcherClass(m)
+        "
+    >
+
+        <div class="poster-wrapper">
+
+            <img
+                v-if="m.image"
+                :src="m.image"
+                class="movie-image"
+                @click="
+                    m.type === 'tv'
+                    && openMovie(m)
+                "
+            />
+
+
+            <button
+                v-if="
+                    m.type === 'tv'
+                "
+                class="watcher-button-small"
+                @click.stop="
+                    changeWatcher(m)
+                "
+                :title="
+                    getWatcherName(m)
+                "
             >
 
-                <div
-                    v-if="
+                {{
+                    getWatcherFlag(m)
+                }}
+
+            </button>
+
+        </div>
+
+
+        <h3>
+            {{ m.name }}
+        </h3>
+
+
+        <div class="buttons">
+
+            <button
+                @click="
+                    updateStatus(
+                        m,
+                        'watched'
+                    )
+                "
+            >
+                ✅
+            </button>
+
+
+            <button
+                @click="
+                    updateStatus(
+                        m,
+                        'watchlist'
+                    )
+                "
+            >
+                ↩️
+            </button>
+
+
+            <button
+                @click="
+                    deleteMovie(m.id)
+                "
+            >
+                ❌
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     ✅ WATCHED
+========================= -->
+
+<h2>
+    ✅ Gesehen
+</h2>
+
+
+<div class="games">
+
+    <div
+        v-for="m in watched"
+        :key="m.id"
+        class="card"
+        :class="
+            getWatcherClass(m)
+        "
+    >
+
+        <div class="poster-wrapper">
+
+            <img
+                v-if="m.image"
+                :src="m.image"
+                class="movie-image"
+                @click="
+                    m.type === 'tv'
+                    && openMovie(m)
+                "
+            />
+
+
+            <button
+                v-if="
+                    m.type === 'tv'
+                "
+                class="watcher-button-small"
+                @click.stop="
+                    changeWatcher(m)
+                "
+                :title="
+                    getWatcherName(m)
+                "
+            >
+
+                {{
+                    getWatcherFlag(m)
+                }}
+
+            </button>
+
+        </div>
+
+
+        <h3>
+            {{ m.name }}
+        </h3>
+
+
+        <div class="buttons">
+
+            <button
+                @click="
+                    updateStatus(
+                        m,
+                        'rewatch'
+                    )
+                "
+            >
+                🔄
+            </button>
+
+
+            <button
+                @click="
+                    updateStatus(
+                        m,
+                        'watchlist'
+                    )
+                "
+            >
+                ↩️
+            </button>
+
+
+            <button
+                @click="
+                    deleteMovie(m.id)
+                "
+            >
+                ❌
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     🔄 REWATCH
+========================= -->
+
+<h2>
+    🔄 Rewatch
+</h2>
+
+
+<div class="games">
+
+    <div
+        v-for="m in rewatch"
+        :key="m.id"
+        class="card"
+        :class="
+            getWatcherClass(m)
+        "
+    >
+
+        <div class="poster-wrapper">
+
+            <img
+                v-if="m.image"
+                :src="m.image"
+                class="movie-image"
+                @click="
+                    m.type === 'tv'
+                    && openMovie(m)
+                "
+            />
+
+
+            <button
+                v-if="
+                    m.type === 'tv'
+                "
+                class="watcher-button-small"
+                @click.stop="
+                    changeWatcher(m)
+                "
+                :title="
+                    getWatcherName(m)
+                "
+            >
+
+                {{
+                    getWatcherFlag(m)
+                }}
+
+            </button>
+
+        </div>
+
+
+        <h3>
+            {{ m.name }}
+        </h3>
+
+
+        <div class="buttons">
+
+            <button
+                @click="
+                    updateStatus(
+                        m,
+                        'watched'
+                    )
+                "
+            >
+                ✅
+            </button>
+
+
+            <button
+                @click="
+                    updateStatus(
+                        m,
+                        'watchlist'
+                    )
+                "
+            >
+                ↩️
+            </button>
+
+
+            <button
+                @click="
+                    deleteMovie(m.id)
+                "
+            >
+                ❌
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     👤 WER SCHAUT DAS?
+========================= -->
+
+<div
+    v-if="
+        showWatcherModal
+    "
+    class="watcher-overlay"
+>
+
+    <div class="watcher-modal">
+
+        <h2>
+            Wer schaut das?
+        </h2>
+
+
+        <div class="watcher-buttons">
+
+            <button
+                class="watcher-choice micky"
+                @click="
+                    selectWatcher(
+                        'micky'
+                    )
+                "
+            >
+
+                <span class="watcher-icon">
+                    🔵
+                </span>
+
+                <span>
+                    Micky
+                </span>
+
+            </button>
+
+
+            <button
+                class="watcher-choice tina"
+                @click="
+                    selectWatcher(
+                        'tina'
+                    )
+                "
+            >
+
+                <span class="watcher-icon">
+                    🩷
+                </span>
+
+                <span>
+                    Tina
+                </span>
+
+            </button>
+
+
+            <button
+                class="watcher-choice gemeinsam"
+                @click="
+                    selectWatcher(
+                        'gemeinsam'
+                    )
+                "
+            >
+
+                <span class="watcher-icon">
+                    🟢
+                </span>
+
+                <span>
+                    Gemeinsam
+                </span>
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     🎬 EPISODEN MODAL
+========================= -->
+
+<div
+    v-if="
+        showEpisodeModal &&
+        openedMovie
+    "
+    class="episode-overlay"
+>
+
+    <div class="episode-modal">
+
+        <button
+            class="close-button"
+            @click="
+                showEpisodeModal = false
+            "
+        >
+            ✖
+        </button>
+
+
+        <img
+            :src="
+                openedMovie.image
+            "
+            class="big-poster"
+        />
+
+
+        <h2>
+            {{ openedMovie.name }}
+        </h2>
+
+
+        <!-- WATCHER -->
+
+        <div
+            v-if="
+                openedMovie.watcher
+            "
+            class="modal-watcher"
+            :class="
+                `modal-${openedMovie.watcher}`
+            "
+        >
+
+            {{
+                getWatcherFlag(
+                    openedMovie
+                )
+            }}
+
+            {{
+                getWatcherName(
+                    openedMovie
+                )
+            }}
+
+        </div>
+
+
+        <!-- STAFFELN -->
+
+        <div class="season-buttons">
+
+            <button
+                v-for="
+                    season in seasons
+                "
+                :key="
+                    season.number
+                "
+                @click="
+                    changeSeason(
+                        season.number
+                    )
+                "
+                :class="{
+                    active:
                         selectedSeason
-                        === season.number
-                    "
-                >
+                        === season.number,
 
-                    <h3>
-                        Staffel
-                        {{ season.number }}
-                    </h3>
-
-
-                    <p>
-
-                        {{
-                            getProgress(
-                                season
-                            ).done
-                        }}
-
-                        /
-
-                        {{
-                            getProgress(
-                                season
-                            ).total
-                        }}
-
-                        Folgen
-
-                        (
-                        {{
-                            getProgress(
-                                season
-                            ).percent
-                        }}%
+                    complete:
+                        seasonFinished(
+                            season
                         )
+                }"
+            >
 
-                    </p>
+                Staffel
+                {{ season.number }}
+
+            </button>
+
+        </div>
 
 
-                    <div class="episodes">
+        <!-- EPISODEN -->
 
-                        <button
-                            v-for="
+        <div
+            v-for="
+                season in seasons
+            "
+            :key="
+                season.number
+            "
+        >
+
+            <div
+                v-if="
+                    selectedSeason
+                    === season.number
+                "
+            >
+
+                <h3>
+                    Staffel
+                    {{ season.number }}
+                </h3>
+
+
+                <p>
+
+                    {{
+                        getProgress(
+                            season
+                        ).done
+                    }}
+
+                    /
+
+                    {{
+                        getProgress(
+                            season
+                        ).total
+                    }}
+
+                    Folgen
+
+                    (
+                    {{
+                        getProgress(
+                            season
+                        ).percent
+                    }}%
+                    )
+
+                </p>
+
+
+                <div class="episodes">
+
+                    <button
+                        v-for="
+                            episode
+                            in season.episodes
+                        "
+                        :key="
+                            episode.number
+                        "
+                        @click="
+                            toggleEpisode(
+                                season,
                                 episode
-                                in season.episodes
-                            "
-                            :key="
-                                episode.number
-                            "
-                            @click="
-                                toggleEpisode(
-                                    season,
-                                    episode
-                                )
-                            "
-                            :class="{
-                                watched:
-                                    episode.watched
-                            }"
-                        >
+                            )
+                        "
+                        :class="{
+                            watched:
+                                episode.watched
+                        }"
+                    >
 
-                            {{
-                                episode.number
-                            }}
+                        {{
+                            episode.number
+                        }}
 
-                        </button>
-
-                    </div>
+                    </button>
 
                 </div>
 
@@ -1383,6 +1647,8 @@ onMounted(() => {
         </div>
 
     </div>
+
+</div>
 
 </template>
 
@@ -1390,7 +1656,7 @@ onMounted(() => {
 <style scoped>
 
 /* =========================
-   🎬 MOVIES
+   🎬 MOVIE IMAGE
 ========================= */
 
 .movie-image {
@@ -1409,7 +1675,6 @@ onMounted(() => {
 
 }
 
-
 .movie-image:hover {
 
     transform: scale(1.05);
@@ -1418,7 +1683,7 @@ onMounted(() => {
 
 
 /* =========================
-   📋 GRID
+   📦 GRID
 ========================= */
 
 .games {
@@ -1458,32 +1723,33 @@ onMounted(() => {
 
 
 /* =========================
-   👤 WATCHER CARD COLORS
+   👤 WATCHER COLORS
 ========================= */
 
 .card.watcher-micky {
 
-    border-color: #3b82f6;
+    border-color:
+        #3b82f6;
 
 }
-
 
 .card.watcher-tina {
 
-    border-color: #ec4899;
+    border-color:
+        #ec4899;
 
 }
 
-
 .card.watcher-gemeinsam {
 
-    border-color: #166534;
+    border-color:
+        #166534;
 
 }
 
 
 /* =========================
-   🖼️ POSTER
+   🖼️ POSTER WRAPPER
 ========================= */
 
 .poster-wrapper {
@@ -1494,10 +1760,10 @@ onMounted(() => {
 
 
 /* =========================
-   👤 WATCHER FLAG
+   👤 WATCHER BUTTON
 ========================= */
 
-.watcher-flag {
+.watcher-button-small {
 
     position: absolute;
 
@@ -1505,9 +1771,11 @@ onMounted(() => {
 
     right: 8px;
 
-    width: 38px;
+    width: 42px;
 
-    height: 38px;
+    height: 42px;
+
+    padding: 0;
 
     border-radius: 50%;
 
@@ -1517,17 +1785,28 @@ onMounted(() => {
 
     justify-content: center;
 
-    font-size: 20px;
+    font-size: 21px;
 
-    background: #111;
+    background:
+        rgba(0, 0, 0, .8);
 
-    border: 2px solid white;
+    border:
+        2px solid white;
 
     box-shadow:
-        0 2px 8px
-        rgba(0, 0, 0, .5);
+        0 3px 10px
+        rgba(0, 0, 0, .6);
 
-    z-index: 5;
+    z-index: 10;
+
+    transition: .2s;
+
+}
+
+.watcher-button-small:hover {
+
+    transform:
+        scale(1.12);
 
 }
 
@@ -1580,7 +1859,6 @@ button {
 
 }
 
-
 .search-wrapper input {
 
     width: 100%;
@@ -1599,7 +1877,6 @@ button {
 
 }
 
-
 .dropdown {
 
     position: absolute;
@@ -1616,7 +1893,6 @@ button {
 
 }
 
-
 .dropdown-item {
 
     display: flex;
@@ -1631,13 +1907,11 @@ button {
 
 }
 
-
 .dropdown-item:hover {
 
     background: #334155;
 
 }
-
 
 .dropdown-item img {
 
@@ -1675,7 +1949,6 @@ button {
 
 }
 
-
 .watcher-modal {
 
     background: #202020;
@@ -1698,13 +1971,11 @@ button {
 
 }
 
-
 .watcher-modal h2 {
 
     margin-bottom: 30px;
 
 }
-
 
 .watcher-buttons {
 
@@ -1719,7 +1990,11 @@ button {
 }
 
 
-.watcher-button {
+/* =========================
+   👤 WATCHER CHOICES
+========================= */
+
+.watcher-choice {
 
     width: 130px;
 
@@ -1735,52 +2010,54 @@ button {
 
     gap: 10px;
 
-    font-size: 35px;
+    font-size: 18px;
+
+    font-weight: bold;
 
     transition: .2s;
 
 }
 
+.watcher-choice:hover {
 
-.watcher-button:hover {
-
-    transform: scale(1.08);
+    transform:
+        scale(1.08);
 
 }
 
+.watcher-icon {
 
-.watcher-button span {
-
-    font-size: 18px;
-
-    font-weight: bold;
+    font-size: 38px;
 
 }
 
 
 /* MICKY */
 
-.watcher-button.micky {
+.watcher-choice.micky {
 
-    border: 3px solid #3b82f6;
+    border:
+        3px solid #3b82f6;
 
 }
 
 
 /* TINA */
 
-.watcher-button.tina {
+.watcher-choice.tina {
 
-    border: 3px solid #ec4899;
+    border:
+        3px solid #ec4899;
 
 }
 
 
 /* GEMEINSAM */
 
-.watcher-button.gemeinsam {
+.watcher-choice.gemeinsam {
 
-    border: 3px solid #166534;
+    border:
+        3px solid #166534;
 
 }
 
@@ -1880,24 +2157,23 @@ button {
 
 }
 
-
 .season-buttons button {
 
     background: #555;
 
 }
 
-
 .season-buttons .active {
 
-    outline: 3px solid white;
+    outline:
+        3px solid white;
 
 }
 
-
 .season-buttons .complete {
 
-    border: 3px solid #00ff66;
+    border:
+        3px solid #00ff66;
 
 }
 
@@ -1918,7 +2194,6 @@ button {
 
 }
 
-
 .episodes button {
 
     width: 45px;
@@ -1927,50 +2202,54 @@ button {
 
 }
 
-
 .episodes .watched {
 
-    background: #00b84f;
+    background:
+        #00b84f;
 
 }
 
 
 /* =========================
-   👤 WATCHER IM MODAL
+   👤 WATCHER IM EPISODEN-MODAL
 ========================= */
 
 .modal-watcher {
 
     display: inline-block;
 
-    margin: 10px auto 20px;
+    margin:
+        5px auto 20px;
 
-    padding: 8px 15px;
+    padding:
+        8px 15px;
 
-    border-radius: 20px;
+    border-radius:
+        20px;
 
-    font-weight: bold;
+    font-weight:
+        bold;
 
 }
-
 
 .modal-micky {
 
-    background: #3b82f6;
+    background:
+        #3b82f6;
 
 }
-
 
 .modal-tina {
 
-    background: #ec4899;
+    background:
+        #ec4899;
 
 }
 
-
 .modal-gemeinsam {
 
-    background: #166534;
+    background:
+        #166534;
 
 }
 
