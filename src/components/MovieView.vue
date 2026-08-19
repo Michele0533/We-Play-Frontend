@@ -13,7 +13,7 @@ const movies = ref([])
 const showDropdown = ref(false)
 
 /* =========================
-   📋 MOVIE LISTS
+   📋 LISTEN
 ========================= */
 
 const watchlist = ref([])
@@ -29,6 +29,8 @@ const showWatcherModal = ref(false)
 
 const watcherMovie = ref(null)
 const pendingNewMovie = ref(null)
+
+const watcherError = ref('')
 
 const watcherOptions = [
     {
@@ -182,35 +184,23 @@ const loadMovies = async () => {
 const addMovie = async (movie) => {
 
     /*
-     * FILM
-     * Direkt hinzufügen wie vorher
-     */
-
-    if (movie.media_type === "movie") {
-
-        await saveNewMovie(
-            movie,
-            null
-        )
-
-        return
-    }
-
-
-    /*
-     * SERIE
-     * Erst Zuschauer auswählen
+     * Egal ob Film oder Serie:
+     * Erst Watcher auswählen.
      */
 
     pendingNewMovie.value = movie
 
     watcherMovie.value = null
 
+    watcherError.value = ''
+
+    showDropdown.value = false
+
     showWatcherModal.value = true
 }
 
 /* =========================
-   💾 NEUES ELEMENT SPEICHERN
+   💾 NEUES MEDIUM SPEICHERN
 ========================= */
 
 const saveNewMovie = async (
@@ -220,7 +210,7 @@ const saveNewMovie = async (
 
     try {
 
-        await fetch(
+        const response = await fetch(
             `${API}/api/movies`,
             {
                 method: "POST",
@@ -253,16 +243,80 @@ const saveNewMovie = async (
                         watcher,
 
                     episodes:
-                        [],
+                        movie.media_type === "tv"
+                            ? []
+                            : undefined,
 
                     lastSeason:
-                        1
+                        movie.media_type === "tv"
+                            ? 1
+                            : undefined
 
                 })
             }
         )
 
+        if (!response.ok) {
+
+            throw new Error(
+                "Medium konnte nicht gespeichert werden."
+            )
+
+        }
+
+        /*
+         * Direkt lokal hinzufügen.
+         * Dadurch ist der Rahmen SOFORT sichtbar.
+         */
+
+        const newMovie = {
+
+            id: movie.id,
+
+            name:
+                movie.title ||
+                movie.name,
+
+            type:
+                movie.media_type,
+
+            image:
+                movie.poster_path
+                    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                    : "",
+
+            status:
+                "watchlist",
+
+            watcher:
+                watcher,
+
+            episodes:
+                movie.media_type === "tv"
+                    ? []
+                    : [],
+
+            lastSeason:
+                movie.media_type === "tv"
+                    ? 1
+                    : 1
+
+        }
+
+        /*
+         * Direkt zur Watchlist
+         */
+
+        watchlist.value.push(
+            newMovie
+        )
+
         resetSearch()
+
+        /*
+         * Sicherheitshalber Backend
+         * nochmal laden.
+         */
 
         await loadMovies()
 
@@ -283,7 +337,7 @@ const saveNewMovie = async (
 const selectWatcher = async (watcher) => {
 
     /*
-     * NEUE SERIE
+     * NEUES MEDIUM
      */
 
     if (pendingNewMovie.value) {
@@ -295,6 +349,8 @@ const selectWatcher = async (watcher) => {
 
         showWatcherModal.value = false
 
+        watcherError.value = ''
+
         await saveNewMovie(
             movie,
             watcher
@@ -305,7 +361,7 @@ const selectWatcher = async (watcher) => {
 
 
     /*
-     * BEREITS VORHANDENE SERIE
+     * BEREITS VORHANDENES MEDIUM
      */
 
     if (watcherMovie.value) {
@@ -313,12 +369,20 @@ const selectWatcher = async (watcher) => {
         const movie =
             watcherMovie.value
 
+        /*
+         * SOFORT lokal ändern.
+         * Dadurch kommt der Rahmen
+         * unmittelbar.
+         */
+
         movie.watcher =
             watcher
 
         watcherMovie.value = null
 
         showWatcherModal.value = false
+
+        watcherError.value = ''
 
         await saveWatcher(
             movie
@@ -336,19 +400,65 @@ const selectWatcher = async (watcher) => {
 
 const changeWatcher = (movie) => {
 
-    /*
-     * Nur Serien
-     */
-
-    if (movie.type !== "tv") {
-        return
-    }
-
     watcherMovie.value = movie
 
     pendingNewMovie.value = null
 
+    watcherError.value = ''
+
     showWatcherModal.value = true
+}
+
+/* =========================
+   ❌ WATCHER MODAL SCHLIESSEN
+========================= */
+
+const closeWatcherModal = () => {
+
+    /*
+     * NEUES MEDIUM:
+     * Nicht speichern!
+     */
+
+    if (pendingNewMovie.value) {
+
+        const type =
+            pendingNewMovie.value.media_type === "tv"
+                ? "Serie"
+                : "Film"
+
+        pendingNewMovie.value = null
+
+        watcherMovie.value = null
+
+        showWatcherModal.value = false
+
+        watcherError.value =
+            `${type} verworfen – keine Angabe zum Watcher. Bitte auswählen.`
+
+        /*
+         * Fehlermeldung kurz anzeigen
+         */
+
+        setTimeout(() => {
+
+            watcherError.value = ''
+
+        }, 4000)
+
+        return
+    }
+
+    /*
+     * Bereits vorhandenes Medium:
+     * einfach schließen.
+     */
+
+    watcherMovie.value = null
+
+    showWatcherModal.value = false
+
+    watcherError.value = ''
 }
 
 /* =========================
@@ -394,10 +504,7 @@ const saveWatcher = async (movie) => {
 
 const getWatcherClass = (movie) => {
 
-    if (
-        movie.type !== "tv" ||
-        !movie.watcher
-    ) {
+    if (!movie.watcher) {
 
         return ""
 
@@ -469,7 +576,7 @@ const getWatcherName = (movie) => {
 
     }
 
-    return "Wer schaut das?"
+    return "Watcher auswählen"
 }
 
 /* =========================
@@ -483,11 +590,10 @@ const updateStatus = async (
 
     /*
      * KEINE WATCHER-ABFRAGE
-     *
-     * Egal ob Film oder Serie.
      */
 
-    movie.status = status
+    movie.status =
+        status
 
 
     /*
@@ -516,7 +622,7 @@ const updateStatus = async (
 
 
     /*
-     * In richtige Liste
+     * In neue Liste
      */
 
     if (
@@ -586,7 +692,9 @@ const updateStatus = async (
    ❌ DELETE
 ========================= */
 
-const deleteMovie = async (id) => {
+const deleteMovie = async (
+    id
+) => {
 
     try {
 
@@ -626,7 +734,9 @@ const resetSearch = () => {
    🎬 SERIE ÖFFNEN
 ========================= */
 
-const openMovie = async (movie) => {
+const openMovie = async (
+    movie
+) => {
 
     if (
         movie.type !== "tv"
@@ -654,7 +764,9 @@ const openMovie = async (movie) => {
    📺 STAFFELN LADEN
 ========================= */
 
-const loadSeasons = async (movie) => {
+const loadSeasons = async (
+    movie
+) => {
 
     try {
 
@@ -741,7 +853,7 @@ const changeSeason = (
 }
 
 /* =========================
-   📊 PROGRESS
+   📊 FORTSCHRITT
 ========================= */
 
 const getProgress = (
@@ -764,11 +876,9 @@ const getProgress = (
             : 0
 
     return {
-
         done,
         total,
         percent
-
     }
 }
 
@@ -906,7 +1016,7 @@ onMounted(() => {
 <template>
 
 <!-- =========================
-     🎬 MOVIES & SERIEN
+     🎬 TITEL
 ========================= -->
 
 <h2>
@@ -1000,12 +1110,9 @@ onMounted(() => {
             />
 
 
-            <!-- WATCHER BUTTON -->
+            <!-- WATCHER -->
 
             <button
-                v-if="
-                    m.type === 'tv'
-                "
                 class="watcher-button-small"
                 @click.stop="
                     changeWatcher(m)
@@ -1104,9 +1211,6 @@ onMounted(() => {
 
 
             <button
-                v-if="
-                    m.type === 'tv'
-                "
                 class="watcher-button-small"
                 @click.stop="
                     changeWatcher(m)
@@ -1205,9 +1309,6 @@ onMounted(() => {
 
 
             <button
-                v-if="
-                    m.type === 'tv'
-                "
                 class="watcher-button-small"
                 @click.stop="
                     changeWatcher(m)
@@ -1306,9 +1407,6 @@ onMounted(() => {
 
 
             <button
-                v-if="
-                    m.type === 'tv'
-                "
                 class="watcher-button-small"
                 @click.stop="
                     changeWatcher(m)
@@ -1374,7 +1472,7 @@ onMounted(() => {
 
 
 <!-- =========================
-     👤 WER SCHAUT DAS?
+     👤 WATCHER MODAL
 ========================= -->
 
 <div
@@ -1385,6 +1483,18 @@ onMounted(() => {
 >
 
     <div class="watcher-modal">
+
+        <!-- X -->
+
+        <button
+            class="watcher-close"
+            @click="
+                closeWatcherModal
+            "
+        >
+            ✕
+        </button>
+
 
         <h2>
             Wer schaut das?
@@ -1455,6 +1565,24 @@ onMounted(() => {
         </div>
 
     </div>
+
+</div>
+
+
+<!-- =========================
+     ⚠️ WATCHER ERROR
+========================= -->
+
+<div
+    v-if="
+        watcherError
+    "
+    class="watcher-error"
+>
+
+    ⚠️
+
+    {{ watcherError }}
 
 </div>
 
@@ -1656,7 +1784,7 @@ onMounted(() => {
 <style scoped>
 
 /* =========================
-   🎬 MOVIE IMAGE
+   🎬 MOVIE
 ========================= */
 
 .movie-image {
@@ -1723,7 +1851,7 @@ onMounted(() => {
 
 
 /* =========================
-   👤 WATCHER COLORS
+   👤 WATCHER RAHMEN
 ========================= */
 
 .card.watcher-micky {
@@ -1749,7 +1877,7 @@ onMounted(() => {
 
 
 /* =========================
-   🖼️ POSTER WRAPPER
+   🖼️ POSTER
 ========================= */
 
 .poster-wrapper {
@@ -1788,7 +1916,7 @@ onMounted(() => {
     font-size: 21px;
 
     background:
-        rgba(0, 0, 0, .8);
+        rgba(0, 0, 0, .85);
 
     border:
         2px solid white;
@@ -1824,7 +1952,6 @@ onMounted(() => {
     margin-top: 10px;
 
 }
-
 
 button {
 
@@ -1949,11 +2076,14 @@ button {
 
 }
 
+
 .watcher-modal {
+
+    position: relative;
 
     background: #202020;
 
-    padding: 35px;
+    padding: 40px 35px 35px;
 
     border-radius: 18px;
 
@@ -1971,11 +2101,58 @@ button {
 
 }
 
+
 .watcher-modal h2 {
 
     margin-bottom: 30px;
 
 }
+
+
+/* =========================
+   ❌ WATCHER CLOSE
+========================= */
+
+.watcher-close {
+
+    position: absolute;
+
+    top: 10px;
+
+    right: 10px;
+
+    width: 35px;
+
+    height: 35px;
+
+    padding: 0;
+
+    font-size: 20px;
+
+    background:
+        #475569;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+}
+
+.watcher-close:hover {
+
+    background:
+        #64748b;
+
+}
+
+
+/* =========================
+   👤 WATCHER OPTIONS
+========================= */
 
 .watcher-buttons {
 
@@ -1989,10 +2166,6 @@ button {
 
 }
 
-
-/* =========================
-   👤 WATCHER CHOICES
-========================= */
 
 .watcher-choice {
 
@@ -2018,12 +2191,14 @@ button {
 
 }
 
+
 .watcher-choice:hover {
 
     transform:
         scale(1.08);
 
 }
+
 
 .watcher-icon {
 
@@ -2032,7 +2207,9 @@ button {
 }
 
 
-/* MICKY */
+/* =========================
+   🔵 MICKY
+========================= */
 
 .watcher-choice.micky {
 
@@ -2042,7 +2219,9 @@ button {
 }
 
 
-/* TINA */
+/* =========================
+   🩷 TINA
+========================= */
 
 .watcher-choice.tina {
 
@@ -2052,12 +2231,52 @@ button {
 }
 
 
-/* GEMEINSAM */
+/* =========================
+   🟢 GEMEINSAM
+========================= */
 
 .watcher-choice.gemeinsam {
 
     border:
         3px solid #166534;
+
+}
+
+
+/* =========================
+   ⚠️ ERROR
+========================= */
+
+.watcher-error {
+
+    position: fixed;
+
+    bottom: 25px;
+
+    left: 50%;
+
+    transform:
+        translateX(-50%);
+
+    background:
+        #7f1d1d;
+
+    color: white;
+
+    padding:
+        14px 22px;
+
+    border-radius:
+        10px;
+
+    font-weight:
+        bold;
+
+    z-index: 3000;
+
+    box-shadow:
+        0 5px 20px
+        rgba(0, 0, 0, .5);
 
 }
 
@@ -2129,7 +2348,7 @@ button {
 
 
 /* =========================
-   ❌ CLOSE
+   ❌ CLOSE EPISODES
 ========================= */
 
 .close-button {
@@ -2140,7 +2359,7 @@ button {
 
 
 /* =========================
-   📺 SEASON BUTTONS
+   📺 SEASONS
 ========================= */
 
 .season-buttons {
@@ -2211,7 +2430,7 @@ button {
 
 
 /* =========================
-   👤 WATCHER IM EPISODEN-MODAL
+   👤 WATCHER IM MODAL
 ========================= */
 
 .modal-watcher {
